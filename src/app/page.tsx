@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, BrainCircuit, ShieldCheck, Zap } from "lucide-react";
 import { motion,Variants } from "motion/react";
-import NetworkGlobeCanvas from "@/components/3d/NetworkGlobe"; // 确保路径正确
+import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const fadeInUp: Variants = {
@@ -32,7 +32,7 @@ export default function LandingPage() {
     return (
         <main className="relative min-h-screen flex flex-col bg-black text-white overflow-hidden">
             {/* 1. 3D 背景层 */}
-            <NetworkGlobeCanvas />
+            <FlowingWaveCanvas />
 
             {/* 2. 顶部导航 (简化版) */}
             <header className="relative z-10 p-6 flex justify-between items-center backdrop-blur-sm border-b border-white/5">

@@ -20,7 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup } from "@/components/ui/radio-group";
 
 // 引入你之前做好的背景组件 (如果没有请用空div代替)
-import ParticleFlowCanvas from "@/components/3d/ParticleFlow";
+// import ParticleFlowCanvas from "@/components/3d/ParticleFlow";
+import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 
 // --- 模拟 RainbowKit/Wagmi Hooks (真实开发时替换为实际库) ---
 const useMockAccount = () => {
@@ -112,7 +113,8 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden flex flex-col">
             {/* 背景 */}
             <div className="fixed inset-0 z-0">
-                <ParticleFlowCanvas />
+                {/*<ParticleFlowCanvas />*/}
+                <FlowingWaveCanvas />
             </div>
 
             {/* 顶部导航 */}
