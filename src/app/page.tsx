@@ -40,11 +40,11 @@ export default function LandingPage() {
                     <BrainCircuit className="text-cyan-400 w-6 h-6" />
                     <span>TaxAgent<span className="text-cyan-400">.AI</span></span>
                 </div>
-                <div>
-                    <ConnectButton />
+                <div className="flex items-center gap-8">
                     <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-950/30 backdrop-blur-md">
                         Kite AI Hackathon
                     </Badge>
+                    <ConnectButton />
                 </div>
             </header>
 
