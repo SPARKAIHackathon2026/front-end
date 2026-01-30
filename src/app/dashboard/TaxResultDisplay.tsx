@@ -1,28 +1,19 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Transaction } from "@/mockData/mockData";
 
-interface AnalyzedTransaction extends Transaction {
-    isTaxable: boolean;
-    gainOrIncome: number;
-    taxCategory: string;
-}
+type TransactionItem = {
+    token: string;
+    profit: number;
+    amount?: number;
+    timestamp?: number;
+    type?: string;
+};
 
-interface TaxResults {
-    analyzedTxs: AnalyzedTransaction[];
-    taxableTotal: number;
-    taxRate: number;
-    taxDue: number;
-}
+export default function TaxResultDisplay({ transactions }: { transactions: TransactionItem[] }) {
+    const totalTransactions = transactions.length;
+    const totalProfit = transactions.reduce((sum, tx) => sum + (tx.profit ?? 0), 0);
+    const profitableCount = transactions.filter((tx) => (tx.profit ?? 0) > 0).length;
 
-export default function TaxResultDisplay({ results }: { results: TaxResults }) {
-    const { analyzedTxs, taxableTotal, taxRate, taxDue } = results;
-
-    // 计算统计数据
-    const totalTransactions = analyzedTxs.length;
-    const totalVolume = analyzedTxs.reduce((sum, tx) => sum + tx.fiatValueAtTime, 0);
-    const estimatedCapitalGains = analyzedTxs
-        .filter(tx => tx.type === "trade" && tx.gainOrIncome > 0)
-        .reduce((sum, tx) => sum + tx.gainOrIncome, 0);
+    const totalAmount = transactions.reduce((sum, tx) => sum + (tx.amount ?? 0), 0);
 
     return (
         <div className="space-y-6">
@@ -35,28 +26,34 @@ export default function TaxResultDisplay({ results }: { results: TaxResults }) {
                         <p className="text-2xl font-bold text-white">{totalTransactions}</p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">总交易量</p>
-                        <p className="text-2xl font-bold text-white">${totalVolume.toLocaleString()}</p>
+                        <p className="text-xs text-zinc-500 uppercase">总数量 (amount)</p>
+                        <p className="text-2xl font-bold text-white">{totalAmount.toLocaleString()}</p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">预估资本利得</p>
-                        <p className="text-2xl font-bold text-yellow-400">${estimatedCapitalGains.toLocaleString()}</p>
+                        <p className="text-xs text-zinc-500 uppercase">盈利笔数</p>
+                        <p className="text-2xl font-bold text-yellow-400">{profitableCount}</p>
                     </div>
                 </div>
                 
                 {/* 第二行 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">应税总额</p>
-                        <p className="text-2xl font-bold text-white">${taxableTotal.toLocaleString()}</p>
+                        <p className="text-xs text-zinc-500 uppercase">总盈亏 (profit)</p>
+                        <p className={`text-2xl font-bold ${totalProfit >= 0 ? "text-green-400" : "text-red-400"}`}>
+                            {totalProfit >= 0 ? "+" : ""}{totalProfit.toLocaleString()}
+                        </p>
                     </div>
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">预估税率</p>
-                        <p className="text-2xl font-bold text-cyan-400">{(taxRate * 100).toFixed(1)}%</p>
+                        <p className="text-xs text-zinc-500 uppercase">平均盈亏/笔</p>
+                        <p className="text-2xl font-bold text-cyan-400">
+                            {totalTransactions > 0 ? (totalProfit / totalTransactions).toFixed(4) : "0"}
+                        </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5">
-                        <p className="text-xs text-cyan-500 uppercase">应缴税额</p>
-                        <p className="text-2xl font-bold text-white">${taxDue.toLocaleString()}</p>
+                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-500 uppercase">资产种类</p>
+                        <p className="text-2xl font-bold text-white">
+                            {Array.from(new Set(transactions.map((t) => t.token))).filter(Boolean).length}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -68,25 +65,29 @@ export default function TaxResultDisplay({ results }: { results: TaxResults }) {
                         <TableRow className="text-white">
                             <TableHead className="text-white">时间</TableHead>
                             <TableHead className="text-white">交易类型</TableHead>
-                            <TableHead className="text-white">应税类别</TableHead>
-                            <TableHead className="text-right text-white">盈亏/收入</TableHead>
+                            <TableHead className="text-white">Token</TableHead>
+                            <TableHead className="text-right text-white">数量</TableHead>
+                            <TableHead className="text-right text-white">盈亏 (profit)</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {analyzedTxs.map((tx: AnalyzedTransaction) => (
-                            <TableRow key={tx.id} className={tx.isTaxable ? "bg-red-500/5" : "opacity-50"}>
-                                <TableCell className="text-xs font-mono">{tx.timestamp}</TableCell>
-                                <TableCell className="capitalize">{tx.type}</TableCell>
-                                <TableCell>
-                   <span className={`text-[10px] px-2 py-1 rounded-full ${tx.isTaxable ? 'bg-red-500/20 text-red-400' : 'bg-zinc-500/20 text-zinc-500'}`}>
-                    {tx.taxCategory}
-                   </span>
-                                </TableCell>
-                                <TableCell className={`text-right font-bold ${tx.gainOrIncome > 0 ? 'text-red-400' : 'text-zinc-500'}`}>
-                                    {tx.isTaxable ? `+$${tx.gainOrIncome.toFixed(2)}` : '--'}
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {transactions.map((tx, idx) => {
+                            const profit = tx.profit ?? 0;
+                            const timestampText = tx.timestamp
+                                ? new Date(tx.timestamp).toLocaleString()
+                                : "--";
+                            return (
+                                <TableRow key={`${tx.token}-${tx.timestamp ?? "na"}-${idx}`}>
+                                    <TableCell className="text-xs font-mono">{timestampText}</TableCell>
+                                    <TableCell className="capitalize">{tx.type ?? "--"}</TableCell>
+                                    <TableCell className="font-mono">{tx.token}</TableCell>
+                                    <TableCell className="text-right font-mono">{(tx.amount ?? 0).toLocaleString()}</TableCell>
+                                    <TableCell className={`text-right font-bold ${profit >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                        {profit >= 0 ? "+" : ""}{profit}
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>
