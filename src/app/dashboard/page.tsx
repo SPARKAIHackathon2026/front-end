@@ -20,7 +20,15 @@ import { Separator } from "@/components/ui/separator";
 import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
 import TaxForm from "@/components/TaxForm";
-import { type Transaction, useSaveTaxProfile, useStrategyComparison, useTaxAnalysis, useTransactions } from "@/lib/api/hooks";
+import {
+    type SettleTaxResult,
+    type Transaction,
+    useSaveTaxProfile,
+    useSettleTax,
+    useStrategyComparison,
+    useTaxAnalysis,
+    useTransactions,
+} from "@/lib/api/hooks";
 
 
 
@@ -38,7 +46,7 @@ const useMockAccount = () => {
 
 export default function DashboardPage() {
     // 状态管理
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
     const { isConnected, address, connect, disconnect } = useMockAccount(); // 模拟钱包 Hook
     const [transActionData, setTransActionData] = useState<Transaction[]>([]);
@@ -46,11 +54,13 @@ export default function DashboardPage() {
     const [shouldAnalyze, setShouldAnalyze] = useState(false);
     const [shouldCompare, setShouldCompare] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string>("");
+    const [settleHistory, setSettleHistory] = useState<(SettleTaxResult & { createdAt: number })[]>([]);
 
     const transactionsQuery = useTransactions(address, { enabled: step === 3 });
     const taxAnalysisQuery = useTaxAnalysis(address, "FIFO", { enabled: step === 3 && shouldAnalyze });
     const strategyComparisonQuery = useStrategyComparison(address, { enabled: step === 3 && shouldCompare });
     const saveTaxProfileMutation = useSaveTaxProfile();
+    const settleTaxMutation = useSettleTax();
 
     // 表单数据
     const [formData, setFormData] = useState({
@@ -68,12 +78,12 @@ export default function DashboardPage() {
     // 导航函数
     const nextStep = () => {
         setDirection(1);
-        setStep((prev) => (prev < 3 ? prev + 1 : prev) as 1 | 2 | 3);
+        setStep((prev) => (prev < 4 ? prev + 1 : prev) as 1 | 2 | 3 | 4);
     };
 
     const prevStep = () => {
         setDirection(-1);
-        setStep((prev) => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3);
+        setStep((prev) => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3 | 4);
     };
 
     useEffect(() => {
@@ -126,6 +136,37 @@ export default function DashboardPage() {
         setShouldAnalyze(true);
         setShouldCompare(true);
         nextStep();
+    };
+
+    const handleSettleTax = async () => {
+        if (!address) return;
+
+        const amount = (strategyComparisonQuery.data?.strategies ?? [])
+            .find((s) => s.strategy.toLowerCase() === selectedPlan)
+            ?.taxAmount;
+
+        try {
+            const payload = await settleTaxMutation.mutateAsync({
+                userAddress: address,
+                amount,
+            });
+
+            const normalized: SettleTaxResult | undefined = (payload as any)?.data?.txHash
+                ? (payload as any).data
+                : (payload as any)?.txHash
+                    ? (payload as any)
+                    : undefined;
+
+            if (!normalized) {
+                return;
+            }
+
+            setSettleHistory((prev) => [{ ...normalized, createdAt: Date.now() }, ...prev]);
+            setDirection(1);
+            setStep(4);
+        } catch (e) {
+            // ignore, toast handled globally
+        }
     };
 
     // 动画配置
@@ -187,7 +228,7 @@ export default function DashboardPage() {
                     <motion.div
                         className="absolute top-1/3 left-0 h-1 bg-cyan-500 -translate-y-1/2 -z-10 origin-left"
                         initial={{ width: "0%" }}
-                        animate={{ width: `${((step - 1) / 2) * 100}%` }}
+                        animate={{ width: `${((step - 1) / 3) * 100}%` }}
                         transition={{ duration: 0.5 }}
                     ></motion.div>
 
@@ -196,6 +237,7 @@ export default function DashboardPage() {
                             { id: 1, title: "连接钱包", icon: Wallet },
                             { id: 2, title: "身份信息", icon: Building2 },
                             { id: 3, title: "智能方案", icon: Bot },
+                            { id: 4, title: "支付完成", icon: Zap },
                         ].map((item) => {
                             const isActive = step >= item.id;
                             return (
@@ -443,13 +485,85 @@ export default function DashboardPage() {
                                                             })()}
                                                         </p>
                                                     </div>
-                                                    <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                                                    <Button
+                                                        onClick={handleSettleTax}
+                                                        disabled={settleTaxMutation.isPending}
+                                                        className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                                                    >
                                                         <Zap className="mr-2 w-4 h-4 fill-yellow-400 text-yellow-400" /> 使用 Kite AI 支付
                                                     </Button>
                                                 </div>
                                             </CardFooter>
                                         </>
                                     )}
+                                </Card>
+                            </motion.div>
+                        )}
+
+                        {step === 4 && (
+                            <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
+                                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
+                                    <CardHeader>
+                                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                                            <CheckCircle2 className="w-6 h-6 text-green-400" />
+                                            已成功提交
+                                        </CardTitle>
+                                        <CardDescription>以下为本次会话内成功提交的历史记录。</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {settleHistory.length === 0 ? (
+                                            <div className="text-gray-400">暂无记录</div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {settleHistory.map((item) => (
+                                                    <div
+                                                        key={`${item.txHash}-${item.createdAt}`}
+                                                        className="rounded-xl border border-white/10 bg-white/5 p-4"
+                                                    >
+                                                        <div className="flex items-start justify-between gap-4">
+                                                            <div className="space-y-1">
+                                                                <div className="text-sm text-gray-300">
+                                                                    {new Date(item.createdAt).toLocaleString()}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 font-mono break-all">
+                                                                    {item.txHash}
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-xs text-gray-400">税额</div>
+                                                                <div className="text-lg font-bold text-white">${item.taxAmount.toLocaleString()}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-3 flex gap-2 flex-wrap">
+                                                            <Badge variant="outline" className="border-white/10 text-gray-300">
+                                                                {item.mode}
+                                                            </Badge>
+                                                            <Badge variant="outline" className="border-white/10 text-gray-300">
+                                                                {item.authority}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
+                                        <Button variant="ghost" onClick={() => setStep(3)} className="text-gray-400">
+                                            返回报告
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                setShouldAnalyze(false);
+                                                setShouldCompare(false);
+                                                setSelectedPlan("");
+                                                setDirection(-1);
+                                                setStep(1);
+                                            }}
+                                            className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
+                                        >
+                                            重新开始
+                                        </Button>
+                                    </CardFooter>
                                 </Card>
                             </motion.div>
                         )}
