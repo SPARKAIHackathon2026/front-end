@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost, API_ENDPOINTS } from "../api-client";
+import { axiosInstance, type ApiResponse, API_ENDPOINTS } from "../api-client";
 
 // ==================== Types ====================
 
@@ -73,17 +73,22 @@ export const queryKeys = {
 /**
  * 获取交易列表
  */
-export function useTransactions(userAddress: string | null) {
+export function useTransactions(
+  userAddress: string | null,
+  options?: {
+    enabled?: boolean;
+  }
+) {
   return useQuery({
     queryKey: queryKeys.transactions(userAddress || ""),
     queryFn: async () => {
       if (!userAddress) throw new Error("userAddress is required");
-      const response = await apiGet<{ transactions: Transaction[]; count: number }>(
-        API_ENDPOINTS.GET_TRANSACTIONS(userAddress)
-      );
-      return response;
+      const res = await axiosInstance.get<
+        ApiResponse<{ transactions: Transaction[]; count: number }>
+      >(API_ENDPOINTS.GET_TRANSACTIONS(userAddress));
+      return res.data;
     },
-    enabled: !!userAddress,
+    enabled: !!userAddress && (options?.enabled ?? true),
     staleTime: 5 * 60 * 1000, // 5分钟
   });
 }
@@ -96,10 +101,10 @@ export function useTaxProfile(userAddress: string | null) {
     queryKey: queryKeys.taxProfile(userAddress || ""),
     queryFn: async () => {
       if (!userAddress) throw new Error("userAddress is required");
-      const response = await apiGet<{ profile: TaxProfile }>(
+      const res = await axiosInstance.get<ApiResponse<{ profile: TaxProfile }>>(
         API_ENDPOINTS.GET_TAX_PROFILE(userAddress)
       );
-      return response;
+      return res.data;
     },
     enabled: !!userAddress,
     retry: false, // 如果不存在，不重试
@@ -114,11 +119,11 @@ export function useSaveTaxProfile() {
 
   return useMutation({
     mutationFn: async (profile: Partial<TaxProfile> & { userAddress: string }) => {
-      const response = await apiPost<{ profile: TaxProfile }>(
+      const res = await axiosInstance.post<ApiResponse<{ profile: TaxProfile }>>(
         API_ENDPOINTS.SAVE_TAX_PROFILE,
         profile
       );
-      return response;
+      return res.data;
     },
     onSuccess: (data, variables) => {
       // 更新缓存
@@ -138,11 +143,11 @@ export function useTaxAnalysis(userAddress: string | null, strategy: string = "F
     queryKey: queryKeys.taxAnalysis(userAddress || "", strategy),
     queryFn: async () => {
       if (!userAddress) throw new Error("userAddress is required");
-      const response = await apiPost<TaxAnalysisResult>(
+      const res = await axiosInstance.post<ApiResponse<TaxAnalysisResult>>(
         API_ENDPOINTS.ANALYZE_TAX,
         { userAddress, strategy }
       );
-      return response;
+      return res.data;
     },
     enabled: !!userAddress,
     staleTime: 2 * 60 * 1000, // 2分钟
@@ -157,11 +162,11 @@ export function useStrategyComparison(userAddress: string | null) {
     queryKey: queryKeys.strategyComparison(userAddress || ""),
     queryFn: async () => {
       if (!userAddress) throw new Error("userAddress is required");
-      const response = await apiPost<CompareStrategiesResult>(
+      const res = await axiosInstance.post<ApiResponse<CompareStrategiesResult>>(
         API_ENDPOINTS.COMPARE_STRATEGIES,
         { userAddress }
       );
-      return response;
+      return res.data;
     },
     enabled: !!userAddress,
     staleTime: 2 * 60 * 1000, // 2分钟
@@ -178,11 +183,11 @@ export function useSettleTax() {
       amount?: number;
       to?: string;
     }) => {
-      const response = await apiPost<SettleTaxResult>(
+      const res = await axiosInstance.post<ApiResponse<SettleTaxResult>>(
         API_ENDPOINTS.SETTLE_TAX,
         params
       );
-      return response;
+      return res.data;
     },
   });
 }
@@ -197,11 +202,11 @@ export function useBindWallet() {
       agentAddress?: string;
       chainId?: number;
     }) => {
-      const response = await apiPost<{ success: boolean }>(
+      const res = await axiosInstance.post<ApiResponse<{ success: boolean }>>(
         API_ENDPOINTS.WALLET_BIND,
         params
       );
-      return response;
+      return res.data;
     },
   });
 }

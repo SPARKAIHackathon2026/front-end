@@ -3,6 +3,9 @@
  * 统一管理后端 API 的基础 URL 和请求方法
  */
 
+import axios, { AxiosError, type AxiosInstance } from "axios";
+import { toast } from "sonner";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
 export interface ApiResponse<T> {
@@ -12,55 +15,54 @@ export interface ApiResponse<T> {
   [key: string]: any;
 }
 
-/**
- * 通用 API 请求函数
- */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+export const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15_000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+axiosInstance.interceptors.request.use((config) => {
+  if (typeof config.data === "string") {
+    try {
+      config.data = JSON.parse(config.data);
+    } catch {
+      // ignore
     }
-
-    return data;
-  } catch (error) {
-    console.error(`API request failed: ${endpoint}`, error);
-    throw error;
   }
-}
+  return config;
+});
 
-/**
- * GET 请求
- */
-export async function apiGet<T>(endpoint: string): Promise<ApiResponse<T>> {
-  return apiRequest<T>(endpoint, { method: "GET" });
-}
+axiosInstance.interceptors.response.use(
+  (response) => {
+    const data = response.data as ApiResponse<any> | undefined;
+    if (data && data.success === false) {
+      const message =
+        (typeof data.error === "string" && data.error) ||
+        (typeof (data as any).message === "string" && (data as any).message) ||
+        "Request failed";
+      toast.error(message);
+      return Promise.reject(new Error(message));
+    }
+    return response;
+  },
+  (error: AxiosError<any>) => {
+    const status = error.response?.status;
+    const data = error.response?.data;
 
-/**
- * POST 请求
- */
-export async function apiPost<T>(
-  endpoint: string,
-  body?: any
-): Promise<ApiResponse<T>> {
-  return apiRequest<T>(endpoint, {
-    method: "POST",
-    body: body ? JSON.stringify(body) : undefined,
-  });
-}
+    const message =
+      (typeof data?.error === "string" && data.error) ||
+      (typeof data?.message === "string" && data.message) ||
+      (typeof data === "string" && data) ||
+      (error.code === "ECONNABORTED" ? "Request timeout" : error.message) ||
+      (status ? `HTTP error! status: ${status}` : "Network error");
+
+    toast.error(message);
+
+    return Promise.reject(error);
+  }
+);
 
 /**
  * API 端点定义
