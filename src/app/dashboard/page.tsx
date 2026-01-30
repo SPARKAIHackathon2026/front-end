@@ -20,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
 import TaxForm from "@/components/TaxForm";
-import { type Transaction, useTransactions } from "@/lib/api/hooks";
+import { type Transaction, useSaveTaxProfile, useStrategyComparison, useTaxAnalysis, useTransactions } from "@/lib/api/hooks";
 
 
 
@@ -43,13 +43,20 @@ export default function DashboardPage() {
     const { isConnected, address, connect, disconnect } = useMockAccount(); // 模拟钱包 Hook
     const [transActionData, setTransActionData] = useState<Transaction[]>([]);
 
+    const [shouldAnalyze, setShouldAnalyze] = useState(false);
+    const [shouldCompare, setShouldCompare] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<string>("");
+
     const transactionsQuery = useTransactions(address, { enabled: step === 3 });
+    const taxAnalysisQuery = useTaxAnalysis(address, "FIFO", { enabled: step === 3 && shouldAnalyze });
+    const strategyComparisonQuery = useStrategyComparison(address, { enabled: step === 3 && shouldCompare });
+    const saveTaxProfileMutation = useSaveTaxProfile();
 
     // 表单数据
     const [formData, setFormData] = useState({
-        country: "",
+        country: "sg",
         taxYear: "2025",
-        residency: "resident",
+        residency: "sg",
         intent: "",
         filingStatus: "single" as "single" | "married",
         annualIncome: undefined as number | undefined,
@@ -75,9 +82,51 @@ export default function DashboardPage() {
             return;
         }
 
-        setIsAnalyzing(transactionsQuery.isFetching);
-        setTransActionData(transactionsQuery.data?.data?.transactions ?? []);
-    }, [step, transactionsQuery.isFetching, transactionsQuery.data]);
+        setIsAnalyzing(
+            transactionsQuery.isFetching ||
+            taxAnalysisQuery.isFetching ||
+            strategyComparisonQuery.isFetching
+        );
+
+        const txs =
+            (transactionsQuery.data as any)?.data?.transactions ??
+            (transactionsQuery.data as any)?.transactions ??
+            [];
+        setTransActionData(txs);
+    }, [
+        step,
+        transactionsQuery.isFetching,
+        transactionsQuery.data,
+        taxAnalysisQuery.isFetching,
+        strategyComparisonQuery.isFetching,
+    ]);
+
+    useEffect(() => {
+        if (!strategyComparisonQuery.data) return;
+        if (selectedPlan) return;
+        setSelectedPlan(strategyComparisonQuery.data.recommended.toLowerCase());
+    }, [strategyComparisonQuery.data, selectedPlan]);
+
+    const handleAnalyze = async () => {
+        if (!address) return;
+
+        try {
+            await saveTaxProfileMutation.mutateAsync({
+                userAddress: address,
+                country: formData.country,
+                taxResidency: formData.residency,
+                taxYear: formData.taxYear,
+                filingStatus: formData.filingStatus,
+                name: "",
+            });
+        } catch (e) {
+            // ignore, toast handled globally
+        }
+
+        setShouldAnalyze(true);
+        setShouldCompare(true);
+        nextStep();
+    };
 
     // 动画配置
     const variants: Variants = {
@@ -256,9 +305,7 @@ export default function DashboardPage() {
                                                 不用担心，您的隐私数据将存储在本地，仅用于 AI 本地计算生成报表，不会上传至中央服务器。
                                             </p>
                                         </div>
-                                        
 
-                                        
                                         
                                     </CardContent>
                                     <CardFooter className="flex justify-between pt-4">
@@ -266,7 +313,7 @@ export default function DashboardPage() {
                                             <ArrowLeft className="mr-2 w-4 h-4" /> 上一步
                                         </Button>
                                         <Button
-                                            onClick={nextStep}
+                                            onClick={handleAnalyze}
                                             disabled={!formData.country || !formData.residency||!formData.taxYear}
                                             className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
                                         >
@@ -320,9 +367,65 @@ export default function DashboardPage() {
 
                                             <CardContent className="space-y-6">
                                                 {/* 1. 钱包数据摘要 */}
-                                                <TaxResultDisplay transactions={transActionData} />
+                                                <TaxResultDisplay
+                                                    transactions={transActionData}
+                                                    analyzeData={(taxAnalysisQuery.data as any)?.data ?? (taxAnalysisQuery.data as any) ?? null}
+                                                />
                                                 <Separator className="bg-white/10" />
+
+                                                <div className="space-y-3">
+                                                    <div className="text-lg text-white font-bold flex items-center gap-2">
+                                                        选择申报策略 <Bot className="w-4 h-4 text-cyan-400"/>
+                                                    </div>
+
+                                                    {strategyComparisonQuery.isFetching ? (
+                                                        <div className="text-center py-8 text-gray-400">加载策略数据...</div>
+                                                    ) : (
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            {(strategyComparisonQuery.data?.strategies ?? []).map((strategy) => {
+                                                                const isRecommended =
+                                                                    strategyComparisonQuery.data?.recommended === strategy.strategy;
+                                                                const isSelected = selectedPlan === strategy.strategy.toLowerCase();
+
+                                                                return (
+                                                                    <div
+                                                                        key={strategy.strategy}
+                                                                        className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${
+                                                                            isSelected
+                                                                                ? isRecommended
+                                                                                    ? "border-green-500 bg-green-950/10"
+                                                                                    : "border-cyan-500 bg-cyan-950/10"
+                                                                                : "border-white/10"
+                                                                        }`}
+                                                                        onClick={() => setSelectedPlan(strategy.strategy.toLowerCase())}
+                                                                    >
+                                                                        {isRecommended && (
+                                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
+                                                                                Recommended
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex justify-between items-center mb-2">
+                                                                            <span className="font-bold text-white">{strategy.strategy}</span>
+                                                                            {isSelected && (
+                                                                                <CheckCircle2 className={`w-4 h-4 ${isRecommended ? "text-green-500" : "text-cyan-500"}`}/>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="text-lg font-bold text-white">
+                                                                            ${strategy.taxAmount.toLocaleString()}
+                                                                            <span className="text-xs text-gray-500 font-normal"> 税费</span>
+                                                                        </div>
+                                                                        <p className="text-[10px] text-gray-400 mt-1">
+                                                                            Capital Gains: {strategy.capitalGains.toLocaleString()}
+                                                                        </p>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </CardContent>
+
+
 
                                             <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
                                                 <Button variant="ghost" onClick={prevStep} className="text-gray-400">
@@ -332,7 +435,12 @@ export default function DashboardPage() {
                                                     <div className="text-right">
                                                         <p className="text-xs text-gray-400">预计需缴税款</p>
                                                         <p className="text-xl font-bold text-white">
-                                                            {"--"}
+                                                            {(() => {
+                                                                const amount = (strategyComparisonQuery.data?.strategies ?? [])
+                                                                    .find((s) => s.strategy.toLowerCase() === selectedPlan)
+                                                                    ?.taxAmount;
+                                                                return typeof amount === "number" ? `$${amount.toLocaleString()}` : "--";
+                                                            })()}
                                                         </p>
                                                     </div>
                                                     <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">

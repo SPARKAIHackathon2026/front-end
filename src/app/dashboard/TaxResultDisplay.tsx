@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { type TaxAnalysisResult } from "@/lib/api/hooks";
 
 type TransactionItem = {
     token: string;
@@ -8,7 +9,13 @@ type TransactionItem = {
     type?: string;
 };
 
-export default function TaxResultDisplay({ transactions }: { transactions: TransactionItem[] }) {
+export default function TaxResultDisplay({
+    transactions,
+    analyzeData,
+}: {
+    transactions: TransactionItem[];
+    analyzeData?: TaxAnalysisResult | null;
+}) {
     const totalTransactions = transactions.length;
     const totalProfit = transactions.reduce((sum, tx) => sum + (tx.profit ?? 0), 0);
     const profitableCount = transactions.filter((tx) => (tx.profit ?? 0) > 0).length;
@@ -56,6 +63,25 @@ export default function TaxResultDisplay({ transactions }: { transactions: Trans
                         </p>
                     </div>
                 </div>
+
+                {analyzeData && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-xs text-zinc-500 uppercase">预估税额</p>
+                            <p className="text-2xl font-bold text-white">${analyzeData.taxAmount.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-xs text-zinc-500 uppercase">税率</p>
+                            <p className="text-2xl font-bold text-cyan-400">{(analyzeData.taxRate * 100).toFixed(2)}%</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-xs text-zinc-500 uppercase">策略 / Authority</p>
+                            <p className="text-sm font-mono text-white break-all">
+                                {analyzeData.strategy} / {analyzeData.authority}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* 交易明细 */}

@@ -138,7 +138,13 @@ export function useSaveTaxProfile() {
 /**
  * 分析税务
  */
-export function useTaxAnalysis(userAddress: string | null, strategy: string = "FIFO") {
+export function useTaxAnalysis(
+  userAddress: string | null,
+  strategy: string = "FIFO",
+  options?: {
+    enabled?: boolean;
+  }
+) {
   return useQuery({
     queryKey: queryKeys.taxAnalysis(userAddress || "", strategy),
     queryFn: async () => {
@@ -149,7 +155,7 @@ export function useTaxAnalysis(userAddress: string | null, strategy: string = "F
       );
       return res.data;
     },
-    enabled: !!userAddress,
+    enabled: !!userAddress && (options?.enabled ?? true),
     staleTime: 2 * 60 * 1000, // 2分钟
   });
 }
@@ -157,18 +163,43 @@ export function useTaxAnalysis(userAddress: string | null, strategy: string = "F
 /**
  * 对比策略
  */
-export function useStrategyComparison(userAddress: string | null) {
+export function useStrategyComparison(
+  userAddress: string | null,
+  options?: {
+    enabled?: boolean;
+  }
+) {
   return useQuery({
     queryKey: queryKeys.strategyComparison(userAddress || ""),
     queryFn: async () => {
       if (!userAddress) throw new Error("userAddress is required");
-      const res = await axiosInstance.post<ApiResponse<CompareStrategiesResult>>(
+      const res = await axiosInstance.post<
+        ApiResponse<CompareStrategiesResult> | (CompareStrategiesResult & { success: boolean })
+      >(
         API_ENDPOINTS.COMPARE_STRATEGIES,
         { userAddress }
       );
-      return res.data;
+
+      const payload: any = res.data;
+      const normalized: CompareStrategiesResult | undefined = payload?.strategies
+        ? {
+            strategies: payload.strategies,
+            recommended: payload.recommended,
+          }
+        : payload?.data?.strategies
+          ? {
+              strategies: payload.data.strategies,
+              recommended: payload.data.recommended,
+            }
+          : undefined;
+
+      if (!normalized) {
+        throw new Error("Invalid strategy comparison response");
+      }
+
+      return normalized;
     },
-    enabled: !!userAddress,
+    enabled: !!userAddress && (options?.enabled ?? true),
     staleTime: 2 * 60 * 1000, // 2分钟
   });
 }
