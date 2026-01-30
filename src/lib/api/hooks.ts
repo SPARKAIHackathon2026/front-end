@@ -1,0 +1,207 @@
+/**
+ * React Query hooks for API calls
+ * 使用 @tanstack/react-query 管理 API 状态
+ */
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiGet, apiPost, API_ENDPOINTS } from "../api-client";
+
+// ==================== Types ====================
+
+export interface Transaction {
+  token: string;
+  profit: number;
+  amount?: number;
+  timestamp?: number;
+  type?: string;
+}
+
+export interface TaxProfile {
+  userAddress: string;
+  country: string;
+  taxResidency: string;
+  taxYear: string;
+  name?: string;
+  filingStatus?: string;
+  updatedAt?: string;
+}
+
+export interface TaxAnalysisResult {
+  transactionCount: number;
+  totalVolume: number;
+  estimatedCapitalGains: number;
+  taxAmount: number;
+  strategy: string;
+  authority: string;
+  taxRate: number;
+}
+
+export interface StrategyComparison {
+  strategy: string;
+  taxAmount: number;
+  capitalGains: number;
+}
+
+export interface CompareStrategiesResult {
+  strategies: StrategyComparison[];
+  recommended: string;
+}
+
+export interface SettleTaxResult {
+  success: boolean;
+  mode: "on-chain" | "initialization-required";
+  taxAmount: number;
+  authority: string;
+  txHash: string;
+  userAddress: string;
+  aaWalletAddress?: string;
+  message?: string;
+  instruction?: string;
+}
+
+// ==================== Query Keys ====================
+
+export const queryKeys = {
+  transactions: (address: string) => ["transactions", address],
+  taxProfile: (address: string) => ["taxProfile", address],
+  taxAnalysis: (address: string, strategy: string) => ["taxAnalysis", address, strategy],
+  strategyComparison: (address: string) => ["strategyComparison", address],
+} as const;
+
+// ==================== Hooks ====================
+
+/**
+ * 获取交易列表
+ */
+export function useTransactions(userAddress: string | null) {
+  return useQuery({
+    queryKey: queryKeys.transactions(userAddress || ""),
+    queryFn: async () => {
+      if (!userAddress) throw new Error("userAddress is required");
+      const response = await apiGet<{ transactions: Transaction[]; count: number }>(
+        API_ENDPOINTS.GET_TRANSACTIONS(userAddress)
+      );
+      return response;
+    },
+    enabled: !!userAddress,
+    staleTime: 5 * 60 * 1000, // 5分钟
+  });
+}
+
+/**
+ * 获取税务档案
+ */
+export function useTaxProfile(userAddress: string | null) {
+  return useQuery({
+    queryKey: queryKeys.taxProfile(userAddress || ""),
+    queryFn: async () => {
+      if (!userAddress) throw new Error("userAddress is required");
+      const response = await apiGet<{ profile: TaxProfile }>(
+        API_ENDPOINTS.GET_TAX_PROFILE(userAddress)
+      );
+      return response;
+    },
+    enabled: !!userAddress,
+    retry: false, // 如果不存在，不重试
+  });
+}
+
+/**
+ * 保存税务档案
+ */
+export function useSaveTaxProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: Partial<TaxProfile> & { userAddress: string }) => {
+      const response = await apiPost<{ profile: TaxProfile }>(
+        API_ENDPOINTS.SAVE_TAX_PROFILE,
+        profile
+      );
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      // 更新缓存
+      queryClient.setQueryData(
+        queryKeys.taxProfile(variables.userAddress),
+        data
+      );
+    },
+  });
+}
+
+/**
+ * 分析税务
+ */
+export function useTaxAnalysis(userAddress: string | null, strategy: string = "FIFO") {
+  return useQuery({
+    queryKey: queryKeys.taxAnalysis(userAddress || "", strategy),
+    queryFn: async () => {
+      if (!userAddress) throw new Error("userAddress is required");
+      const response = await apiPost<TaxAnalysisResult>(
+        API_ENDPOINTS.ANALYZE_TAX,
+        { userAddress, strategy }
+      );
+      return response;
+    },
+    enabled: !!userAddress,
+    staleTime: 2 * 60 * 1000, // 2分钟
+  });
+}
+
+/**
+ * 对比策略
+ */
+export function useStrategyComparison(userAddress: string | null) {
+  return useQuery({
+    queryKey: queryKeys.strategyComparison(userAddress || ""),
+    queryFn: async () => {
+      if (!userAddress) throw new Error("userAddress is required");
+      const response = await apiPost<CompareStrategiesResult>(
+        API_ENDPOINTS.COMPARE_STRATEGIES,
+        { userAddress }
+      );
+      return response;
+    },
+    enabled: !!userAddress,
+    staleTime: 2 * 60 * 1000, // 2分钟
+  });
+}
+
+/**
+ * 结算税务（支付）
+ */
+export function useSettleTax() {
+  return useMutation({
+    mutationFn: async (params: {
+      userAddress: string;
+      amount?: number;
+      to?: string;
+    }) => {
+      const response = await apiPost<SettleTaxResult>(
+        API_ENDPOINTS.SETTLE_TAX,
+        params
+      );
+      return response;
+    },
+  });
+}
+
+/**
+ * 绑定钱包
+ */
+export function useBindWallet() {
+  return useMutation({
+    mutationFn: async (params: {
+      userAddress: string;
+      agentAddress?: string;
+      chainId?: number;
+    }) => {
+      const response = await apiPost<{ success: boolean }>(
+        API_ENDPOINTS.WALLET_BIND,
+        params
+      );
+      return response;
+    },
+  });
+}
