@@ -85,9 +85,12 @@ export default function LandingPage() {
                                     启动控制台 <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </Link>
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto text-base cursor-pointer border-white/20 text-gray-700 hover:bg-white/5 hover:text-white px-8 py-6 rounded-full backdrop-blur-md">
-                                了解 Kite AI 集成
-                            </Button>
+                            <Link href="https://docs.gokite.ai" target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="lg" className="w-full sm:w-auto text-base cursor-pointer border-white/20 text-gray-700 hover:bg-white/5 hover:text-white px-8 py-6 rounded-full backdrop-blur-md">
+                                    了解 Kite AI 集成
+                                </Button>   
+                            </Link>
+
                         </motion.div>
 
                         {/* 特性列表 */}
