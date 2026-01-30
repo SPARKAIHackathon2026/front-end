@@ -57,9 +57,12 @@ export default function LandingPage() {
                                     <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
-                            <Button variant="outline" size="lg" className="cursor-pointer text-black h-16 px-10 rounded-full border-white/20 backdrop-blur-md bg-white/10 text-lg">
-                                了解 Kite AI 集成
-                            </Button>
+                            <Link href="https://docs.gokite.ai">
+                                <Button variant="outline" size="lg" className="cursor-pointer text-black h-16 px-10 rounded-full border-white/20 backdrop-blur-md bg-white/10 text-lg">
+                                    了解 Kite AI 集成
+                                </Button>
+                            </Link>
+
                         </div>
                     </motion.div>
                 </section>
