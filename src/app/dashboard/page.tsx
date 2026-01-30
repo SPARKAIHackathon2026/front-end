@@ -19,30 +19,10 @@ import { Separator } from "@/components/ui/separator";
 // import ParticleFlowCanvas from "@/components/3d/ParticleFlow";
 import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
-import { calculateTax } from "@/algorithm/taxEngine";
-import { mockTransactions } from "@/mockData/mockData";
 import TaxForm from "@/components/TaxForm";
+import { type Transaction, useTransactions } from "@/lib/api/hooks";
 
-interface TaxResults {
-    analyzedTxs: Array<{
-        isTaxable: boolean;
-        gainOrIncome: number;
-        taxCategory: string;
-        id: string;
-        timestamp: string;
-        hash: string;
-        type: "trade" | "receive" | "send" | "staking" | "airdrop";
-        fromAsset: string;
-        fromAmount: number;
-        toAsset: string;
-        toAmount: number;
-        fiatValueAtTime: number;
-        costBasis?: number;
-    }>;
-    taxableTotal: number;
-    taxRate: number;
-    taxDue: number;
-}
+
 
 const useMockAccount = () => {
     const { isConnected, address } = useAccount();
@@ -61,6 +41,9 @@ export default function DashboardPage() {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
     const { isConnected, address, connect, disconnect } = useMockAccount(); // 模拟钱包 Hook
+    const [transActionData, setTransActionData] = useState<Transaction[]>([]);
+
+    const transactionsQuery = useTransactions(address, { enabled: step === 3 });
 
     // 表单数据
     const [formData, setFormData] = useState({
@@ -74,8 +57,6 @@ export default function DashboardPage() {
 
     // 分析状态
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analysisDone, setAnalysisDone] = useState(false);
-    const [taxResults, setTaxResults] = useState<TaxResults | null>(null);
 
     // 导航函数
     const nextStep = () => {
@@ -88,23 +69,15 @@ export default function DashboardPage() {
         setStep((prev) => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3);
     };
 
-    // 触发 Step 3 的分析逻辑
     useEffect(() => {
-        if (step === 3 && !analysisDone) {
-            setIsAnalyzing(true);
-            // 模拟 AI 分析耗时 2.5秒
-            setTimeout(() => {
-                // 计算税务结果
-                const results = calculateTax(mockTransactions, {
-                    country: formData.country as "us" | "sg" | "cn" | "uk" | "jp",
-                    intent: formData.intent as "investment" | "trading" | undefined,
-                });
-                setTaxResults(results);
-                setIsAnalyzing(false);
-                setAnalysisDone(true);
-            }, 2500);
+        if (step !== 3) {
+            setIsAnalyzing(false);
+            return;
         }
-    }, [step, analysisDone, formData.country, formData.intent]);
+
+        setIsAnalyzing(transactionsQuery.isFetching);
+        setTransActionData(transactionsQuery.data?.data?.transactions ?? []);
+    }, [step, transactionsQuery.isFetching, transactionsQuery.data]);
 
     // 动画配置
     const variants: Variants = {
@@ -347,7 +320,7 @@ export default function DashboardPage() {
 
                                             <CardContent className="space-y-6">
                                                 {/* 1. 钱包数据摘要 */}
-                                                {taxResults && <TaxResultDisplay results={taxResults} />}
+                                                <TaxResultDisplay transactions={transActionData} />
                                                 <Separator className="bg-white/10" />
                                             </CardContent>
 
@@ -359,7 +332,7 @@ export default function DashboardPage() {
                                                     <div className="text-right">
                                                         <p className="text-xs text-gray-400">预计需缴税款</p>
                                                         <p className="text-xl font-bold text-white">
-                                                            {taxResults ? `$${taxResults.taxDue.toLocaleString()}` : "--"}
+                                                            {"--"}
                                                         </p>
                                                     </div>
                                                     <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">

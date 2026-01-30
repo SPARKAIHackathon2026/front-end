@@ -20,6 +20,7 @@ import {
     QueryClientProvider,
     QueryClient,
 } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
@@ -52,6 +53,7 @@ export default function RootLayout({
           <QueryClientProvider client={queryClient}>
               <RainbowKitProvider>
                   {children}
+                  <Toaster />
               </RainbowKitProvider>
           </QueryClientProvider>
         </WagmiProvider>
