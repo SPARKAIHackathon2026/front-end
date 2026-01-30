@@ -75,10 +75,19 @@ export default function DashboardPage() {
     // 分析状态
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+    const steps = [
+        { id: 1, title: "连接钱包", icon: Wallet },
+        { id: 2, title: "身份信息", icon: Building2 },
+        { id: 3, title: "智能方案", icon: Bot },
+        { id: 4, title: "支付完成", icon: Zap },
+    ] as const;
+
+    const maxStep = steps.length as 4;
+
     // 导航函数
     const nextStep = () => {
         setDirection(1);
-        setStep((prev) => (prev < 4 ? prev + 1 : prev) as 1 | 2 | 3 | 4);
+        setStep((prev) => (prev < maxStep ? prev + 1 : prev) as 1 | 2 | 3 | 4);
     };
 
     const prevStep = () => {
@@ -190,6 +199,299 @@ export default function DashboardPage() {
         })
     };
 
+    const renderStep = () => {
+        if (step === 1) {
+            return (
+                <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
+                    <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl">
+                        <CardHeader>
+                            <CardTitle className="text-2xl text-white">连接您的 Web3 资产</CardTitle>
+                            <CardDescription>我们将扫描您的链上交易记录以计算税务基准。</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className={`p-8 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all duration-300 ${isConnected ? "border-green-500/30 bg-green-500/5" : "border-white/10 bg-white/5"}`}>
+                                {isConnected ? (
+                                    <>
+                                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                                            <Wallet className="w-8 h-8 text-green-400" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-lg font-bold text-white">已连接 RainbowKit</h3>
+                                            <p className="text-gray-400 font-mono mt-1">{address}</p>
+                                        </div>
+                                        <Button variant="outline" size="sm" onClick={() => disconnect()} className="mt-2 border-red-500/30 text-red-400 hover:bg-red-950/30 hover:text-red-300">
+                                            断开连接
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
+                                            <Wallet className="w-8 h-8 text-gray-500" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-lg font-bold text-gray-300">未检测到钱包</h3>
+                                            <p className="text-sm text-gray-500 mt-1">请点击下方按钮连接 RainbowKit</p>
+                                        </div>
+                                        <Button onClick={connect} className="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/20">
+                                            <span className="mr-2">🌈</span> Connect Wallet
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-end pt-4">
+                            <Button
+                                onClick={nextStep}
+                                disabled={!isConnected}
+                                className={`px-8 ${isConnected ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-500"}`}
+                            >
+                                下一步 <ArrowRight className="ml-2 w-4 h-4" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </motion.div>
+            );
+        }
+
+        if (step === 2) {
+            return (
+                <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
+                    <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl">
+                        <CardHeader>
+                            <CardTitle className="text-2xl text-white">完善税务身份</CardTitle>
+                            <CardDescription>不同的国家/地区适用不同的税收政策，AI 将为您自动匹配。</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <TaxForm
+                                formData={formData}
+                                onFormDataChange={(newData) => {
+                                    setFormData(newData);
+                                }}
+                            />
+
+                            <div className="p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg flex gap-3">
+                                <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                                <p className="text-sm text-blue-200">
+                                    不用担心，您的隐私数据将存储在本地，仅用于 AI 本地计算生成报表，不会上传至中央服务器。
+                                </p>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between pt-4">
+                            <Button variant="ghost" onClick={prevStep} className="text-gray-400 hover:text-white hover:bg-white/10">
+                                <ArrowLeft className="mr-2 w-4 h-4" /> 上一步
+                            </Button>
+                            <Button
+                                onClick={handleAnalyze}
+                                disabled={!formData.country || !formData.residency || !formData.taxYear}
+                                className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
+                            >
+                                开始 AI 分析 <Bot className="ml-2 w-4 h-4" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </motion.div>
+            );
+        }
+
+        if (step === 3) {
+            return (
+                <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
+                    <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
+                        {isAnalyzing ? (
+                            <div className="h-[500px] flex flex-col items-center justify-center space-y-6">
+                                <div className="relative">
+                                    <div className="w-24 h-24 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Bot className="w-8 h-8 text-cyan-400 animate-pulse" />
+                                    </div>
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <h3 className="text-xl font-bold text-white">AI 正在扫描链上数据...</h3>
+                                    <p className="text-gray-400 font-mono text-sm">
+                                        Parsing tx history for {address}... <br/>
+                                        Matching {formData.country} tax regulations...
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <CardHeader className="pb-2">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <CardTitle className="text-2xl text-white flex items-center gap-2">
+                                                <FileBarChart className="w-6 h-6 text-cyan-400" />
+                                                分析报告 ({formData.taxYear})
+                                            </CardTitle>
+                                            <CardDescription>
+                                                基于您在 {formData.country} 的税务身份分析
+                                            </CardDescription>
+                                        </div>
+                                        <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-900/20">
+                                            可优化
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="space-y-6">
+                                    <TaxResultDisplay
+                                        transactions={transActionData}
+                                        analyzeData={(taxAnalysisQuery.data as any)?.data ?? (taxAnalysisQuery.data as any) ?? null}
+                                    />
+                                    <Separator className="bg-white/10" />
+
+                                    <div className="space-y-3">
+                                        <div className="text-lg text-white font-bold flex items-center gap-2">
+                                            选择申报策略 <Bot className="w-4 h-4 text-cyan-400"/>
+                                        </div>
+
+                                        {strategyComparisonQuery.isFetching ? (
+                                            <div className="text-center py-8 text-gray-400">加载策略数据...</div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                {(strategyComparisonQuery.data?.strategies ?? []).map((strategy) => {
+                                                    const isRecommended =
+                                                        strategyComparisonQuery.data?.recommended === strategy.strategy;
+                                                    const isSelected = selectedPlan === strategy.strategy.toLowerCase();
+
+                                                    return (
+                                                        <div
+                                                            key={strategy.strategy}
+                                                            className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${
+                                                                isSelected
+                                                                    ? isRecommended
+                                                                        ? "border-green-500 bg-green-950/10"
+                                                                        : "border-cyan-500 bg-cyan-950/10"
+                                                                    : "border-white/10"
+                                                            }`}
+                                                            onClick={() => setSelectedPlan(strategy.strategy.toLowerCase())}
+                                                        >
+                                                            {isRecommended && (
+                                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
+                                                                    Recommended
+                                                                </div>
+                                                            )}
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className="font-bold text-white">{strategy.strategy}</span>
+                                                                {isSelected && (
+                                                                    <CheckCircle2 className={`w-4 h-4 ${isRecommended ? "text-green-500" : "text-cyan-500"}`}/>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-lg font-bold text-white">
+                                                                ${strategy.taxAmount.toLocaleString()}
+                                                                <span className="text-xs text-gray-500 font-normal"> 税费</span>
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-400 mt-1">
+                                                                Capital Gains: {strategy.capitalGains.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+
+                                <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
+                                    <Button variant="ghost" onClick={prevStep} className="text-gray-400">
+                                        重新填写
+                                    </Button>
+                                    <div className="flex gap-4 items-center">
+                                        <div className="text-right">
+                                            <p className="text-xs text-gray-400">预计需缴税款</p>
+                                            <p className="text-xl font-bold text-white">
+                                                {(() => {
+                                                    const amount = (strategyComparisonQuery.data?.strategies ?? [])
+                                                        .find((s) => s.strategy.toLowerCase() === selectedPlan)
+                                                        ?.taxAmount;
+                                                    return typeof amount === "number" ? `$${amount.toLocaleString()}` : "--";
+                                                })()}
+                                            </p>
+                                        </div>
+                                        <Button
+                                            onClick={handleSettleTax}
+                                            disabled={settleTaxMutation.isPending}
+                                            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                                        >
+                                            <Zap className="mr-2 w-4 h-4 fill-yellow-400 text-yellow-400" /> 使用 Kite AI 支付
+                                        </Button>
+                                    </div>
+                                </CardFooter>
+                            </>
+                        )}
+                    </Card>
+                </motion.div>
+            );
+        }
+
+        return (
+            <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
+                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
+                    <CardHeader>
+                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                            <CheckCircle2 className="w-6 h-6 text-green-400" />
+                            已成功提交
+                        </CardTitle>
+                        <CardDescription>以下为本次会话内成功提交的历史记录。</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {settleHistory.length === 0 ? (
+                            <div className="text-gray-400">暂无记录</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {settleHistory.map((item) => (
+                                    <div
+                                        key={`${item.txHash}-${item.createdAt}`}
+                                        className="rounded-xl border border-white/10 bg-white/5 p-4"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <div className="text-sm text-gray-300">
+                                                    {new Date(item.createdAt).toLocaleString()}
+                                                </div>
+                                                <div className="text-xs text-gray-500 font-mono break-all">
+                                                    {item.txHash}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs text-gray-400">税额</div>
+                                                <div className="text-lg font-bold text-white">${item.taxAmount.toLocaleString()}</div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex gap-2 flex-wrap">
+                                            <Badge variant="outline" className="border-white/10 text-gray-300">
+                                                {item.mode}
+                                            </Badge>
+                                            <Badge variant="outline" className="border-white/10 text-gray-300">
+                                                {item.authority}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
+                        <Button variant="ghost" onClick={() => setStep(3)} className="text-gray-400">
+                            返回报告
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShouldAnalyze(false);
+                                setShouldCompare(false);
+                                setSelectedPlan("");
+                                setDirection(-1);
+                                setStep(1);
+                            }}
+                            className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
+                        >
+                            重新开始
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </motion.div>
+        );
+    };
+
     return (
         <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden flex flex-col">
             {/* 背景 */}
@@ -228,17 +530,12 @@ export default function DashboardPage() {
                     <motion.div
                         className="absolute top-1/3 left-0 h-1 bg-cyan-500 -translate-y-1/2 -z-10 origin-left"
                         initial={{ width: "0%" }}
-                        animate={{ width: `${((step - 1) / 3) * 100}%` }}
+                        animate={{ width: `${((step - 1) / (maxStep - 1)) * 100}%` }}
                         transition={{ duration: 0.5 }}
                     ></motion.div>
 
                     <div className="flex justify-between">
-                        {[
-                            { id: 1, title: "连接钱包", icon: Wallet },
-                            { id: 2, title: "身份信息", icon: Building2 },
-                            { id: 3, title: "智能方案", icon: Bot },
-                            { id: 4, title: "支付完成", icon: Zap },
-                        ].map((item) => {
+                        {steps.map((item) => {
                             const isActive = step >= item.id;
                             return (
                                 <div key={item.id} className="flex flex-col items-center gap-2  px-2">
@@ -270,303 +567,7 @@ export default function DashboardPage() {
                 <div className="w-full max-w-2xl perspective-1000">
                     <AnimatePresence custom={direction} mode="wait">
 
-                        {/* STEP 1: 连接钱包 */}
-                        {step === 1 && (
-                            <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
-                                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl">
-                                    <CardHeader>
-                                        <CardTitle className="text-2xl text-white">连接您的 Web3 资产</CardTitle>
-                                        <CardDescription>我们将扫描您的链上交易记录以计算税务基准。</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        {/* 状态展示区 */}
-                                        <div className={`p-8 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all duration-300 ${isConnected ? "border-green-500/30 bg-green-500/5" : "border-white/10 bg-white/5"}`}>
-                                            {isConnected ? (
-                                                <>
-                                                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                        <Wallet className="w-8 h-8 text-green-400" />
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <h3 className="text-lg font-bold text-white">已连接 RainbowKit</h3>
-                                                        <p className="text-gray-400 font-mono mt-1">{address}</p>
-                                                    </div>
-                                                    <Button variant="outline" size="sm" onClick={() => disconnect()} className="mt-2 border-red-500/30 text-red-400 hover:bg-red-950/30 hover:text-red-300">
-                                                        断开连接
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
-                                                        <Wallet className="w-8 h-8 text-gray-500" />
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <h3 className="text-lg font-bold text-gray-300">未检测到钱包</h3>
-                                                        <p className="text-sm text-gray-500 mt-1">请点击下方按钮连接 RainbowKit</p>
-                                                    </div>
-                                                    {/* 模拟 Rainbow Button */}
-                                                    <Button onClick={connect} className="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/20">
-                                                        <span className="mr-2">🌈</span> Connect Wallet
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="flex justify-end pt-4">
-                                        <Button
-                                            onClick={nextStep}
-                                            disabled={!isConnected}
-                                            className={`px-8 ${isConnected ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-500"}`}
-                                        >
-                                            下一步 <ArrowRight className="ml-2 w-4 h-4" />
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {/* STEP 2: 完善信息 */}
-                        {step === 2 && (
-                            <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
-                                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl">
-                                    <CardHeader>
-                                        <CardTitle className="text-2xl text-white">完善税务身份</CardTitle>
-                                        <CardDescription>不同的国家/地区适用不同的税收政策，AI 将为您自动匹配。</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-
-                                        <TaxForm
-                                            formData={formData}
-                                            onFormDataChange={(newData) => {
-                                                setFormData(newData);
-                                            }}
-                                        />
-
-                                        <div className="p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg flex gap-3">
-                                            <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                                            <p className="text-sm text-blue-200">
-                                                不用担心，您的隐私数据将存储在本地，仅用于 AI 本地计算生成报表，不会上传至中央服务器。
-                                            </p>
-                                        </div>
-
-                                        
-                                    </CardContent>
-                                    <CardFooter className="flex justify-between pt-4">
-                                        <Button variant="ghost" onClick={prevStep} className="text-gray-400 hover:text-white hover:bg-white/10">
-                                            <ArrowLeft className="mr-2 w-4 h-4" /> 上一步
-                                        </Button>
-                                        <Button
-                                            onClick={handleAnalyze}
-                                            disabled={!formData.country || !formData.residency||!formData.taxYear}
-                                            className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
-                                        >
-                                            开始 AI 分析 <Bot className="ml-2 w-4 h-4" />
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {/* STEP 3: 分析结果与方案选择 */}
-                        {step === 3 && (
-                            <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
-                                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
-                                    {isAnalyzing ? (
-                                        /* --- Loading 状态 --- */
-                                        <div className="h-[500px] flex flex-col items-center justify-center space-y-6">
-                                            <div className="relative">
-                                                <div className="w-24 h-24 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <Bot className="w-8 h-8 text-cyan-400 animate-pulse" />
-                                                </div>
-                                            </div>
-                                            <div className="text-center space-y-2">
-                                                <h3 className="text-xl font-bold text-white">AI 正在扫描链上数据...</h3>
-                                                <p className="text-gray-400 font-mono text-sm">
-                                                    Parsing tx history for {address}... <br/>
-                                                    Matching {formData.country} tax regulations...
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* --- 结果展示状态 --- */
-                                        <>
-                                            <CardHeader className="pb-2">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <CardTitle className="text-2xl text-white flex items-center gap-2">
-                                                            <FileBarChart className="w-6 h-6 text-cyan-400" />
-                                                            分析报告 ({formData.taxYear})
-                                                        </CardTitle>
-                                                        <CardDescription>
-                                                            基于您在 {formData.country} 的税务身份分析
-                                                        </CardDescription>
-                                                    </div>
-                                                    <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-900/20">
-                                                        可优化
-                                                    </Badge>
-                                                </div>
-                                            </CardHeader>
-
-                                            <CardContent className="space-y-6">
-                                                {/* 1. 钱包数据摘要 */}
-                                                <TaxResultDisplay
-                                                    transactions={transActionData}
-                                                    analyzeData={(taxAnalysisQuery.data as any)?.data ?? (taxAnalysisQuery.data as any) ?? null}
-                                                />
-                                                <Separator className="bg-white/10" />
-
-                                                <div className="space-y-3">
-                                                    <div className="text-lg text-white font-bold flex items-center gap-2">
-                                                        选择申报策略 <Bot className="w-4 h-4 text-cyan-400"/>
-                                                    </div>
-
-                                                    {strategyComparisonQuery.isFetching ? (
-                                                        <div className="text-center py-8 text-gray-400">加载策略数据...</div>
-                                                    ) : (
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                            {(strategyComparisonQuery.data?.strategies ?? []).map((strategy) => {
-                                                                const isRecommended =
-                                                                    strategyComparisonQuery.data?.recommended === strategy.strategy;
-                                                                const isSelected = selectedPlan === strategy.strategy.toLowerCase();
-
-                                                                return (
-                                                                    <div
-                                                                        key={strategy.strategy}
-                                                                        className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${
-                                                                            isSelected
-                                                                                ? isRecommended
-                                                                                    ? "border-green-500 bg-green-950/10"
-                                                                                    : "border-cyan-500 bg-cyan-950/10"
-                                                                                : "border-white/10"
-                                                                        }`}
-                                                                        onClick={() => setSelectedPlan(strategy.strategy.toLowerCase())}
-                                                                    >
-                                                                        {isRecommended && (
-                                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
-                                                                                Recommended
-                                                                            </div>
-                                                                        )}
-                                                                        <div className="flex justify-between items-center mb-2">
-                                                                            <span className="font-bold text-white">{strategy.strategy}</span>
-                                                                            {isSelected && (
-                                                                                <CheckCircle2 className={`w-4 h-4 ${isRecommended ? "text-green-500" : "text-cyan-500"}`}/>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="text-lg font-bold text-white">
-                                                                            ${strategy.taxAmount.toLocaleString()}
-                                                                            <span className="text-xs text-gray-500 font-normal"> 税费</span>
-                                                                        </div>
-                                                                        <p className="text-[10px] text-gray-400 mt-1">
-                                                                            Capital Gains: {strategy.capitalGains.toLocaleString()}
-                                                                        </p>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-
-
-
-                                            <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
-                                                <Button variant="ghost" onClick={prevStep} className="text-gray-400">
-                                                    重新填写
-                                                </Button>
-                                                <div className="flex gap-4 items-center">
-                                                    <div className="text-right">
-                                                        <p className="text-xs text-gray-400">预计需缴税款</p>
-                                                        <p className="text-xl font-bold text-white">
-                                                            {(() => {
-                                                                const amount = (strategyComparisonQuery.data?.strategies ?? [])
-                                                                    .find((s) => s.strategy.toLowerCase() === selectedPlan)
-                                                                    ?.taxAmount;
-                                                                return typeof amount === "number" ? `$${amount.toLocaleString()}` : "--";
-                                                            })()}
-                                                        </p>
-                                                    </div>
-                                                    <Button
-                                                        onClick={handleSettleTax}
-                                                        disabled={settleTaxMutation.isPending}
-                                                        className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-                                                    >
-                                                        <Zap className="mr-2 w-4 h-4 fill-yellow-400 text-yellow-400" /> 使用 Kite AI 支付
-                                                    </Button>
-                                                </div>
-                                            </CardFooter>
-                                        </>
-                                    )}
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {step === 4 && (
-                            <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="w-full">
-                                <Card className="bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
-                                    <CardHeader>
-                                        <CardTitle className="text-2xl text-white flex items-center gap-2">
-                                            <CheckCircle2 className="w-6 h-6 text-green-400" />
-                                            已成功提交
-                                        </CardTitle>
-                                        <CardDescription>以下为本次会话内成功提交的历史记录。</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {settleHistory.length === 0 ? (
-                                            <div className="text-gray-400">暂无记录</div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {settleHistory.map((item) => (
-                                                    <div
-                                                        key={`${item.txHash}-${item.createdAt}`}
-                                                        className="rounded-xl border border-white/10 bg-white/5 p-4"
-                                                    >
-                                                        <div className="flex items-start justify-between gap-4">
-                                                            <div className="space-y-1">
-                                                                <div className="text-sm text-gray-300">
-                                                                    {new Date(item.createdAt).toLocaleString()}
-                                                                </div>
-                                                                <div className="text-xs text-gray-500 font-mono break-all">
-                                                                    {item.txHash}
-                                                                </div>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <div className="text-xs text-gray-400">税额</div>
-                                                                <div className="text-lg font-bold text-white">${item.taxAmount.toLocaleString()}</div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="mt-3 flex gap-2 flex-wrap">
-                                                            <Badge variant="outline" className="border-white/10 text-gray-300">
-                                                                {item.mode}
-                                                            </Badge>
-                                                            <Badge variant="outline" className="border-white/10 text-gray-300">
-                                                                {item.authority}
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                    <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
-                                        <Button variant="ghost" onClick={() => setStep(3)} className="text-gray-400">
-                                            返回报告
-                                        </Button>
-                                        <Button
-                                            onClick={() => {
-                                                setShouldAnalyze(false);
-                                                setShouldCompare(false);
-                                                setSelectedPlan("");
-                                                setDirection(-1);
-                                                setStep(1);
-                                            }}
-                                            className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
-                                        >
-                                            重新开始
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            </motion.div>
-                        )}
+                        {renderStep()}
                     </AnimatePresence>
                 </div>
             </main>
