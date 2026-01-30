@@ -12,18 +12,38 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup } from "@/components/ui/radio-group";
 
 // 引入你之前做好的背景组件 (如果没有请用空div代替)
 // import ParticleFlowCanvas from "@/components/3d/ParticleFlow";
 import FlowingWaveCanvas from "@/components/3d/FlowingWave";
+import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
+import { calculateTax } from "@/algorithm/taxEngine";
+import { mockTransactions } from "@/mockData/mockData";
+import TaxForm from "@/components/TaxForm";
 
-// --- 模拟 RainbowKit/Wagmi Hooks (真实开发时替换为实际库) ---
+interface TaxResults {
+    analyzedTxs: Array<{
+        isTaxable: boolean;
+        gainOrIncome: number;
+        taxCategory: string;
+        id: string;
+        timestamp: string;
+        hash: string;
+        type: "trade" | "receive" | "send" | "staking" | "airdrop";
+        fromAsset: string;
+        fromAmount: number;
+        toAsset: string;
+        toAmount: number;
+        fiatValueAtTime: number;
+        costBasis?: number;
+    }>;
+    taxableTotal: number;
+    taxRate: number;
+    taxDue: number;
+}
+
 const useMockAccount = () => {
     const { isConnected, address } = useAccount();
     const { disconnect } = useDisconnect();
@@ -36,17 +56,6 @@ const useMockAccount = () => {
     return { isConnected, address: address ?? null, connect, disconnect };
 };
 
-// --- 常量定义 ---
-const COUNTRIES = [
-    { value: "us", label: "🇺🇸 United States (美国)" },
-    { value: "sg", label: "🇸🇬 Singapore (新加坡)" },
-    { value: "jp", label: "🇯🇵 Japan (日本)" },
-    { value: "cn", label: "🇨🇳 China (中国)" },
-    { value: "uk", label: "🇬🇧 United Kingdom (英国)" },
-];
-
-const TAX_YEARS = ["2024", "2023", "2022"];
-
 export default function DashboardPage() {
     // 状态管理
     const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -55,15 +64,18 @@ export default function DashboardPage() {
 
     // 表单数据
     const [formData, setFormData] = useState({
-        name: "",
         country: "",
-        taxYear: "2024",
+        taxYear: "2025",
+        residency: "resident",
+        intent: "",
+        filingStatus: "single" as "single" | "married",
+        annualIncome: undefined as number | undefined,
     });
 
     // 分析状态
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisDone, setAnalysisDone] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState("hifo"); // 默认选中 HIFO
+    const [taxResults, setTaxResults] = useState<TaxResults | null>(null);
 
     // 导航函数
     const nextStep = () => {
@@ -82,11 +94,17 @@ export default function DashboardPage() {
             setIsAnalyzing(true);
             // 模拟 AI 分析耗时 2.5秒
             setTimeout(() => {
+                // 计算税务结果
+                const results = calculateTax(mockTransactions, {
+                    country: formData.country as "us" | "sg" | "cn" | "uk" | "jp",
+                    intent: formData.intent as "investment" | "trading" | undefined,
+                });
+                setTaxResults(results);
                 setIsAnalyzing(false);
                 setAnalysisDone(true);
             }, 2500);
         }
-    }, [step, analysisDone]);
+    }, [step, analysisDone, formData.country, formData.intent]);
 
     // 动画配置
     const variants: Variants = {
@@ -142,10 +160,10 @@ export default function DashboardPage() {
 
                 {/* 步骤进度条 */}
                 <div className="w-full mb-12 relative px-10">
-                    <div className="absolute top-1/2 left-0 w-full h-1 bg-white/10 -translate-y-1/2 -z-10"></div>
+                    <div className="absolute top-1/3 left-0 w-full h-1 bg-white/10 -translate-y-1/2 -z-10"></div>
                     {/* 动态进度条 */}
                     <motion.div
-                        className="absolute top-1/2 left-0 h-1 bg-cyan-500 -translate-y-1/2 -z-10 origin-left"
+                        className="absolute top-1/3 left-0 h-1 bg-cyan-500 -translate-y-1/2 -z-10 origin-left"
                         initial={{ width: "0%" }}
                         animate={{ width: `${((step - 1) / 2) * 100}%` }}
                         transition={{ duration: 0.5 }}
@@ -159,7 +177,7 @@ export default function DashboardPage() {
                         ].map((item) => {
                             const isActive = step >= item.id;
                             return (
-                                <div key={item.id} className="flex flex-col items-center gap-2 bg-black px-2">
+                                <div key={item.id} className="flex flex-col items-center gap-2  px-2">
                                     <motion.div
                                         animate={{
                                             backgroundColor: isActive ? "#06b6d4" : "#171717",
@@ -251,47 +269,13 @@ export default function DashboardPage() {
                                         <CardDescription>不同的国家/地区适用不同的税收政策，AI 将为您自动匹配。</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-300">真实姓名 (Legal Name)</Label>
-                                            <Input
-                                                placeholder="如: Zhang San"
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                                className="text-white bg-white/5 border-white/10 focus:border-cyan-500/50"
-                                            />
-                                        </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-gray-300">居住国家/地区</Label>
-                                                <Select
-                                                    value={formData.country}
-                                                    onValueChange={(val) => setFormData({...formData, country: val})}
-                                                >
-                                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                                        <SelectValue placeholder="选择国家" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="bg-gray-900 border-white/10 text-white">
-                                                        {COUNTRIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label className="text-gray-300">报税财年</Label>
-                                                <Select
-                                                    value={formData.taxYear}
-                                                    onValueChange={(val) => setFormData({...formData, taxYear: val})}
-                                                >
-                                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                                        <SelectValue placeholder="年份" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="bg-gray-900 border-white/10 text-white">
-                                                        {TAX_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
+                                        <TaxForm
+                                            formData={formData}
+                                            onFormDataChange={(newData) => {
+                                                setFormData(newData);
+                                            }}
+                                        />
 
                                         <div className="p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg flex gap-3">
                                             <AlertCircle className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
@@ -299,6 +283,10 @@ export default function DashboardPage() {
                                                 不用担心，您的隐私数据将存储在本地，仅用于 AI 本地计算生成报表，不会上传至中央服务器。
                                             </p>
                                         </div>
+                                        
+
+                                        
+                                        
                                     </CardContent>
                                     <CardFooter className="flex justify-between pt-4">
                                         <Button variant="ghost" onClick={prevStep} className="text-gray-400 hover:text-white hover:bg-white/10">
@@ -306,7 +294,7 @@ export default function DashboardPage() {
                                         </Button>
                                         <Button
                                             onClick={nextStep}
-                                            disabled={!formData.country || !formData.name}
+                                            disabled={!formData.country || !formData.residency||!formData.taxYear}
                                             className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
                                         >
                                             开始 AI 分析 <Bot className="ml-2 w-4 h-4" />
@@ -348,7 +336,7 @@ export default function DashboardPage() {
                                                             分析报告 ({formData.taxYear})
                                                         </CardTitle>
                                                         <CardDescription>
-                                                            基于您在 {formData.country === 'us' ? 'United States' : 'Selected Region'} 的税务身份分析
+                                                            基于您在 {formData.country} 的税务身份分析
                                                         </CardDescription>
                                                     </div>
                                                     <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-900/20">
@@ -359,66 +347,8 @@ export default function DashboardPage() {
 
                                             <CardContent className="space-y-6">
                                                 {/* 1. 钱包数据摘要 */}
-                                                <div className="grid grid-cols-3 gap-4">
-                                                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                                        <p className="text-xs text-gray-500">交易笔数</p>
-                                                        <p className="text-xl font-bold text-white">1,240</p>
-                                                    </div>
-                                                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                                        <p className="text-xs text-gray-500">总交易量</p>
-                                                        <p className="text-xl font-bold text-white">$420k</p>
-                                                    </div>
-                                                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                                                        <p className="text-xs text-gray-500">预估资本利得</p>
-                                                        <p className="text-xl font-bold text-yellow-400">+$12,500</p>
-                                                    </div>
-                                                </div>
-
+                                                {taxResults && <TaxResultDisplay results={taxResults} />}
                                                 <Separator className="bg-white/10" />
-
-                                                {/* 2. 方案选择 (核心功能) */}
-                                                <div className="space-y-3">
-                                                    <Label className="text-lg text-white font-bold flex items-center gap-2">
-                                                        选择 AI 推荐的申报方案 <Bot className="w-4 h-4 text-cyan-400"/>
-                                                    </Label>
-
-                                                    <RadioGroup defaultValue="hifo" value={selectedPlan} onValueChange={setSelectedPlan} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                                                        {/* FIFO 方案 */}
-                                                        <div className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${selectedPlan === 'fifo' ? 'border-cyan-500 bg-cyan-950/10' : 'border-white/10'}`} onClick={() => setSelectedPlan('fifo')}>
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <span className="font-bold text-white">FIFO</span>
-                                                                {selectedPlan === 'fifo' && <CheckCircle2 className="w-4 h-4 text-cyan-500"/>}
-                                                            </div>
-                                                            <p className="text-xs text-gray-400 mb-2">先进先出 (Standard)</p>
-                                                            <div className="text-lg font-bold text-white">$3,200 <span className="text-xs text-gray-500 font-normal">税费</span></div>
-                                                        </div>
-
-                                                        {/* HIFO 方案 (推荐) */}
-                                                        <div className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${selectedPlan === 'hifo' ? 'border-green-500 bg-green-950/10 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'border-white/10'}`} onClick={() => setSelectedPlan('hifo')}>
-                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
-                                                                Best Value
-                                                            </div>
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <span className="font-bold text-white">HIFO</span>
-                                                                {selectedPlan === 'hifo' && <CheckCircle2 className="w-4 h-4 text-green-500"/>}
-                                                            </div>
-                                                            <p className="text-xs text-gray-400 mb-2">最高成本先出 (Optimized)</p>
-                                                            <div className="text-lg font-bold text-green-400">$2,150 <span className="text-xs text-gray-500 font-normal">税费</span></div>
-                                                            <p className="text-[10px] text-green-500 mt-1">为您节省 $1,050</p>
-                                                        </div>
-
-                                                        {/* LIFO 方案 */}
-                                                        <div className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-white/5 ${selectedPlan === 'lifo' ? 'border-cyan-500 bg-cyan-950/10' : 'border-white/10'}`} onClick={() => setSelectedPlan('lifo')}>
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <span className="font-bold text-white">LIFO</span>
-                                                                {selectedPlan === 'lifo' && <CheckCircle2 className="w-4 h-4 text-cyan-500"/>}
-                                                            </div>
-                                                            <p className="text-xs text-gray-400 mb-2">后进先出</p>
-                                                            <div className="text-lg font-bold text-white">$2,800 <span className="text-xs text-gray-500 font-normal">税费</span></div>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
                                             </CardContent>
 
                                             <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
@@ -429,7 +359,7 @@ export default function DashboardPage() {
                                                     <div className="text-right">
                                                         <p className="text-xs text-gray-400">预计需缴税款</p>
                                                         <p className="text-xl font-bold text-white">
-                                                            {selectedPlan === 'fifo' ? '$3,200' : selectedPlan === 'hifo' ? '$2,150' : '$2,800'}
+                                                            {taxResults ? `$${taxResults.taxDue.toLocaleString()}` : "--"}
                                                         </p>
                                                     </div>
                                                     <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
