@@ -6,7 +6,7 @@ import {motion, AnimatePresence, Variants} from "motion/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
-    ChevronLeft, Bot, Wallet, Zap,
+    Bot, Wallet, Zap,
     CheckCircle2, AlertCircle, ArrowRight, ArrowLeft,
     FileBarChart, Building2
 } from "lucide-react";
@@ -15,9 +15,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-// 引入你之前做好的背景组件 (如果没有请用空div代替)
-// import ParticleFlowCanvas from "@/components/3d/ParticleFlow";
-import FlowingWaveCanvas from "@/components/3d/FlowingWave";
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
 import TaxForm from "@/components/TaxForm";
 import {
@@ -29,7 +26,10 @@ import {
     useTaxAnalysis,
     useTransactions,
 } from "@/lib/api/hooks";
-import Image from "next/image";
+//背景组件
+import FluidBackground from "@/components/FluidBackground";
+import Footer from "@/app/sections/Footer";
+import {useRouter} from "next/navigation";
 
 
 
@@ -48,6 +48,7 @@ const useMockAccount = () => {
 
 export default function DashboardPage() {
     // 状态管理
+    const router = useRouter();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
     const { isConnected, address, connect, disconnect, connector } = useMockAccount(); // 模拟钱包 Hook
@@ -224,7 +225,7 @@ export default function DashboardPage() {
                                             </div>
                                             <p className="text-gray-400 font-mono text-sm">{address}</p>
                                         </div>
-                                        <Button variant="outline" size="sm" onClick={() => disconnect()} className="mt-2 border-red-500/30 text-red-400 hover:bg-red-950/30 hover:text-red-300">
+                                        <Button variant="outline" size="sm" onClick={() => disconnect()} className="cursor-pointer mt-2 hover:border-red-500/30 hover:text-red-400 bg-red-950/30 text-red-300">
                                             断开连接
                                         </Button>
                                     </>
@@ -237,7 +238,7 @@ export default function DashboardPage() {
                                             <h3 className="text-lg font-bold text-gray-300">未检测到钱包</h3>
                                             <p className="text-sm text-gray-500 mt-1">请点击下方按钮连接 RainbowKit</p>
                                         </div>
-                                        <Button onClick={connect} className="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/20">
+                                        <Button onClick={connect} className="cursor-pointer border-none mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/20">
                                             <span className="mr-2">🌈</span> Connect Wallet
                                         </Button>
                                     </>
@@ -248,7 +249,7 @@ export default function DashboardPage() {
                             <Button
                                 onClick={nextStep}
                                 disabled={!isConnected}
-                                className={`px-8 ${isConnected ? "bg-cyan-500 hover:bg-cyan-400 text-black" : "bg-gray-800 text-gray-500"}`}
+                                className={`px-8 border-none ${isConnected ? "bg-cyan-500 hover:bg-cyan-400 text-black cursor-pointer" : "cursor-not-allowed bg-gray-800 text-gray-500 "}`}
                             >
                                 下一步 <ArrowRight className="ml-2 w-4 h-4" />
                             </Button>
@@ -282,13 +283,13 @@ export default function DashboardPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between pt-4">
-                            <Button variant="ghost" onClick={prevStep} className="text-gray-400 hover:text-white hover:bg-white/10">
+                            <Button variant="ghost" onClick={prevStep} className="cursor-pointer border-none text-gray-400 hover:text-white hover:bg-white/10">
                                 <ArrowLeft className="mr-2 w-4 h-4" /> 上一步
                             </Button>
                             <Button
                                 onClick={handleAnalyze}
                                 disabled={!formData.country || !formData.residency || !formData.taxYear}
-                                className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
+                                className="bg-cyan-500 hover:bg-cyan-400 text-black px-8 cursor-pointer border-none"
                             >
                                 开始 AI 分析 <Bot className="ml-2 w-4 h-4" />
                             </Button>
@@ -382,7 +383,7 @@ export default function DashboardPage() {
                                                                 )}
                                                             </div>
                                                             <div className="text-lg font-bold text-white">
-                                                                ${strategy.taxAmount.toLocaleString()}
+                                                                ${strategy.taxAmount.toFixed(2).toLocaleString()}
                                                                 <span className="text-xs text-gray-500 font-normal"> 税费</span>
                                                             </div>
                                                             <p className="text-[10px] text-gray-400 mt-1">
@@ -397,25 +398,25 @@ export default function DashboardPage() {
                                 </CardContent>
 
                                 <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
-                                    <Button variant="ghost" onClick={prevStep} className="text-gray-400">
+                                    <Button variant="outline" onClick={prevStep} className="cursor-pointer text-blue-500 border-none ">
                                         重新填写
                                     </Button>
                                     <div className="flex gap-4 items-center">
                                         <div className="text-right">
-                                            <p className="text-xs text-gray-400">预计需缴税款</p>
-                                            <p className="text-xl font-bold text-white">
+                                            <p className="text-xs text-gray-400 m-0">预计需缴税款</p>
+                                            <div className="text-xl font-bold text-white">
                                                 {(() => {
                                                     const amount = (strategyComparisonQuery.data?.strategies ?? [])
                                                         .find((s) => s.strategy.toLowerCase() === selectedPlan)
                                                         ?.taxAmount;
-                                                    return typeof amount === "number" ? `$${amount.toLocaleString()}` : "--";
+                                                    return typeof amount === "number" ? `$${amount.toFixed(2).toLocaleString()}` : "--";
                                                 })()}
-                                            </p>
+                                            </div>
                                         </div>
                                         <Button
                                             onClick={handleSettleTax}
                                             disabled={settleTaxMutation.isPending}
-                                            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                                            className="cursor-pointer border-none bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold h-12 px-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
                                         >
                                             <Zap className="mr-2 w-4 h-4 fill-yellow-400 text-yellow-400" /> 使用 Kite AI 支付
                                         </Button>
@@ -498,21 +499,26 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden flex flex-col">
+        <div className="min-h-screen w-full bg-black text-white font-sans relative overflow-hidden flex flex-col">
             {/* 背景 */}
             <div className="fixed inset-0 z-0">
-                {/*<ParticleFlowCanvas />*/}
-                <FlowingWaveCanvas />
+                <FluidBackground />
             </div>
 
             {/* 顶部导航 */}
-            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl h-16 flex items-center justify-between px-6">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-                        <ChevronLeft className="w-5 h-5" /> 返回首页
-                    </Link>
+            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl h-16 flex items-center justify-between">
+                <div className="cursor-pointer flex items-center gap-4"  onClick={() => router.push('/')}>
+
+                    <div className="w-8 h-8 rounded-lg bg-[#3898EC] flex items-center justify-center group-hover:glow-blue transition-all ml-6">
+                        <Wallet className="w-5 h-5 text-white" />
+                    </div>
+                    <span className={`font-bold text-lg transition-colors text-white`}>
+                        KiteTax
+                        <span className="text-[#3898EC]"> Pal</span>
+                    </span>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex items-center gap-3 mr-6">
                     {isConnected ? (
                         <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-950/20 px-3 py-1 flex gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -576,6 +582,8 @@ export default function DashboardPage() {
                     </AnimatePresence>
                 </div>
             </main>
+            {/* Footer */}
+            <Footer />
         </div>
     );
 }
