@@ -1,59 +1,59 @@
 import { useEffect, useRef, useState } from 'react';
 import { Linkedin, Twitter, Github } from 'lucide-react';
 
-const teamMembers = [
-  {
-    name: '陈明远',
-    nameEn: 'Michael Chen',
-    role: '创始人 & CEO',
-    roleEn: 'Founder & CEO',
-    image: '/team-1.jpg',
-    bio: '前 Binance 税务合规负责人，10年金融科技经验',
-    social: {
-      linkedin: '#',
-      twitter: '#',
-      github: '#',
+const teamMembers =[
+    {
+        "name": "SArreic",
+        "nameEn": "SArreic",
+        "role": "联合创始人 & 技术架构师",
+        "roleEn": "Co-Founder & Technical Architect",
+        "image": "/team-2.png",
+        "bio": "新加坡在读实习生，兼具创意孵化与技术落地能力，作为联合创始人主导KiteTax Pal项目核心创意提出，擅长后端开发与智能合约编写，为项目提供坚实的技术架构支撑",
+        "social": {
+            "linkedin": "#",
+            "twitter": "#",
+            "github": "https://github.com/SArreic"
+        }
     },
-  },
-  {
-    name: '林雨萱',
-    nameEn: 'Sarah Lin',
-    role: '首席技术官',
-    roleEn: 'CTO',
-    image: '/team-2.jpg',
-    bio: 'MIT 计算机科学博士，区块链安全专家',
-    social: {
-      linkedin: '#',
-      twitter: '#',
-      github: '#',
+    {
+        "name": "Riwev",
+        "nameEn": "Riwev",
+        "role": "技术负责人 & 智能合约专家",
+        "roleEn": "Tech Lead & Smart Contract Specialist",
+        "image": "/team-3.jpg",
+        "bio": "区块链专业在读学生，技术负责人兼智能合约核心开发者，精通Solidity编程与Hardhat框架，深入理解Uniswap等DeFi协议底层机制，负责项目合约架构设计、开发与安全审计",
+        "social": {
+            "linkedin": "#",
+            "twitter": "#",
+            "github": "https://github.com/riwev"
+        }
     },
-  },
-  {
-    name: 'Alexander Weber',
-    nameEn: 'Alex Weber',
-    role: '首席合规官',
-    roleEn: 'Chief Compliance Officer',
-    image: '/team-3.jpg',
-    bio: '前 OECD 税收政策顾问，CARF 框架制定参与者',
-    social: {
-      linkedin: '#',
-      twitter: '#',
-      github: '#',
+    {
+        "name": "Fenix（接offer版）",
+        "nameEn": "Fenix Ives",
+        "role": "前端负责人 & 交互设计师",
+        "roleEn": "Frontend Leader &   UI/UX Designer",
+        "image": "/team-1.jpg",
+        "bio": "外企Web2资深从业背景，主动转型深耕Web3技术领域的技术热爱者，作为前端负责人主导项目前端架构搭建、交互设计与用户界面开发，打造流畅易用的产品体验",
+        "social": {
+            "linkedin": "#",
+            "twitter": "#",
+            "github": "https://github.com/fenixIves"
+        }
     },
-  },
-  {
-    name: 'Amara Johnson',
-    nameEn: 'Amara Johnson',
-    role: '产品总监',
-    roleEn: 'Head of Product',
-    image: '/team-4.jpg',
-    bio: '前 Coinbase 产品经理，专注 Web3 用户体验',
-    social: {
-      linkedin: '#',
-      twitter: '#',
-      github: '#',
-    },
-  },
+    {
+        "name": "张 Zoey",
+        "nameEn": "Zoey Zhang",
+        "role": "合规负责人 & 法律顾问",
+        "roleEn": "Compliance Lead & Legal Counsel",
+        "image": "/team-4.jpg",
+        "bio": "资深法律工作者，专注于区块链与金融科技领域合规服务，作为合规负责人搭建项目全流程法律合规体系，提供政策解读、风险管控与合规审查支持，保障项目合法合规运营",
+        "social": {
+            "linkedin": "#",
+            "twitter": "#",
+            "github": "https://github.com/zoeyz3"
+        }
+    }
 ];
 
 export default function Team() {
@@ -159,7 +159,7 @@ export default function Team() {
                     </p>
                     <p className="text-sm text-white/70 mb-1">{member.role}</p>
                     <p className="text-xs text-white/40">{member.roleEn}</p>
-                    <p className="text-xs text-white/50 mt-3 line-clamp-2">
+                    <p className="text-xs text-white/50 mt-3 line-clamp-5">
                       {member.bio}
                     </p>
                   </div>
