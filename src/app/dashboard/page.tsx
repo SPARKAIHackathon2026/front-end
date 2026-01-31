@@ -8,7 +8,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
     Bot, Wallet, Zap,
     CheckCircle2, AlertCircle, ArrowRight, ArrowLeft,
-    FileBarChart, Building2
+    FileBarChart, Building2, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -360,7 +360,18 @@ export default function DashboardPage() {
 
                                     <div className="space-y-3">
                                         <div className="text-lg text-white font-bold flex items-center gap-2">
-                                            选择申报策略 <Bot className="w-4 h-4 text-cyan-400"/>
+
+                                            <Bot className="w-4 h-4 text-cyan-400"/>选择申报策略
+                                            <a 
+                                                href="/fifo" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-cyan-400 hover:text-cyan-300 transition-colors "
+                                                title="了解FIFO、LIFO、HIFO计价方法的区别"
+                                            >
+                                                <HelpCircle className="w-4 h-4" />
+                                            </a>
+
                                         </div>
 
                                         {strategyComparisonQuery.isFetching ? (
