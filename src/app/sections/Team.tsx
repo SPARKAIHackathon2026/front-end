@@ -182,7 +182,10 @@ export default function Team() {
             <p className="text-white/60 mb-6">
               我们正在寻找对 Web3 和税务合规充满热情的人才
             </p>
-            <button className="btn-secondary text-sm py-3 px-8">
+            <button 
+              onClick={() => window.open('https://github.com/orgs/SPARKAIHackathon2026/repositories', '_blank')}
+              className="btn-secondary text-sm py-3 px-8"
+            >
               查看职位
             </button>
           </div>
