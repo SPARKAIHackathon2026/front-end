@@ -210,7 +210,7 @@ src/
 
 ## 📞 联系我们
 
-- **项目主页**: [https://github.com/SPARKAIHackathon2026/front-end-hackathon](https://github.com/SPARKAIHackathon2026/front-end-hackathon)
+- **项目主页**: [https://github.com/SPARKAIHackathon2026/front-end](https://github.com/SPARKAIHackathon2026/front-end)
 
 ---
 
