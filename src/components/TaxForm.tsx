@@ -48,8 +48,11 @@ export default function TaxForm({ formData, onFormDataChange }: TaxFormProps) {
                             <SelectValue placeholder="选择身份" />
                         </SelectTrigger>
                         <SelectContent position="popper" className="bg-gray-900 border-white/10 text-white">
-                            <SelectItem value="resident">当地税务居民</SelectItem>
-                            <SelectItem value="non_resident">非居民/数字游民</SelectItem>
+                            {COUNTRIES.map((country) => (
+                                <SelectItem key={country.value} value={country.value}>
+                                    {country.label}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
