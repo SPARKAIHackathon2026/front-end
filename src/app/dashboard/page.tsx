@@ -52,6 +52,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
+    const [isPaymentLoading, setIsPaymentLoading] = useState(false);
     const { isConnected, address, connect, disconnect, connector } = useMockAccount(); // 模拟钱包 Hook
     const [transActionData, setTransActionData] = useState<Transaction[]>([]);
 
@@ -160,6 +161,9 @@ export default function DashboardPage() {
             ?.taxAmount;
 
         try {
+            // Show loading state
+            setIsPaymentLoading(true);
+            
             const payload = await settleTaxMutation.mutateAsync({
                 userAddress: address,
                 amount,
@@ -172,13 +176,16 @@ export default function DashboardPage() {
                     : undefined;
 
             if (!normalized) {
+                setIsPaymentLoading(false);
                 return;
             }
 
             setSettleHistory((prev) => [{ ...normalized, createdAt: Date.now() }, ...prev]);
+            setIsPaymentLoading(false);
             setDirection(1);
             setStep(4);
         } catch (e) {
+            setIsPaymentLoading(false);
             // ignore, toast handled globally
         }
     };
@@ -605,6 +612,58 @@ export default function DashboardPage() {
                         {renderStep()}
                     </AnimatePresence>
                 </div>
+
+                {/* Payment Loading Overlay */}
+                {isPaymentLoading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center"
+                    >
+                        <div className="bg-black/60 border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4">
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                                    <Zap className="w-8 h-8 text-cyan-400 animate-pulse" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-white mb-2">正在处理税务支付</h3>
+                                <p className="text-gray-400 text-sm">Kite AI 正在为您完成合规税务流程</p>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {[
+                                    { label: "分析链上应税明细", status: "complete" },
+                                    { label: "正在通过 Kite AI 代理", status: "loading" },
+                                    { label: "生成合规性证明 (CARF Standard)", status: "pending" },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                                            item.status === "complete" ? "bg-green-500" :
+                                            item.status === "loading" ? "bg-cyan-500 animate-pulse" :
+                                            "bg-gray-600"
+                                        }`}>
+                                            {item.status === "complete" && (
+                                                <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                            {item.status === "loading" && (
+                                                <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                                            )}
+                                        </div>
+                                        <span className={`text-sm ${
+                                            item.status === "complete" ? "text-green-400" :
+                                            item.status === "loading" ? "text-cyan-400" :
+                                            "text-gray-500"
+                                        }`}>
+                                            {item.label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
             </main>
             {/* Footer */}
             <Footer />
