@@ -8,7 +8,7 @@ const teamMembers =[
         "role": "联合创始人 & 技术架构师",
         "roleEn": "Co-Founder & Technical Architect",
         "image": "/team-2.png",
-        "bio": "新加坡在读实习生，兼具创意孵化与技术落地能力，作为联合创始人主导KiteTax Pal项目核心创意提出，擅长后端开发与智能合约编写，为项目提供坚实的技术架构支撑",
+        "bio": "新加坡在读，兼具创意孵化与技术落地能力，作为联合创始人主导KiteTax Pal项目核心创意提出，负责后端开发与智能合约编写，为项目提供坚实的技术架构支撑",
         "social": {
             "linkedin": "#",
             "twitter": "#",
@@ -21,7 +21,7 @@ const teamMembers =[
         "role": "技术负责人 & 智能合约专家",
         "roleEn": "Tech Lead & Smart Contract Specialist",
         "image": "/team-3.jpg",
-        "bio": "区块链专业在读学生，技术负责人兼智能合约核心开发者，精通Solidity编程与Hardhat框架，深入理解Uniswap等DeFi协议底层机制，负责项目合约架构设计、开发与安全审计",
+        "bio": "区块链专业在读，技术负责人兼智能合约核心开发者，精通Solidity编程与Hardhat框架，深入理解Uniswap等DeFi协议底层机制，负责项目合约架构设计、开发与安全审计",
         "social": {
             "linkedin": "#",
             "twitter": "#",
@@ -34,7 +34,7 @@ const teamMembers =[
         "role": "前端负责人 & 交互设计师",
         "roleEn": "Frontend Leader &   UI/UX Designer",
         "image": "/team-1.jpg",
-        "bio": "外企Web2资深从业背景，主动转型深耕Web3技术领域的技术热爱者，作为前端负责人主导项目前端架构搭建、交互设计与用户界面开发，打造流畅易用的产品体验",
+        "bio": "全栈开发工程师，拥有外企Web2技术背景，精通TS、CSS、React、Vue等现代前端技术栈，擅长产品性能优化与用户体验设计，主导项目前端架构设计、交互实现与界面开发，构建高性能、易扩展的产品解决方案",
         "social": {
             "linkedin": "#",
             "twitter": "#",
