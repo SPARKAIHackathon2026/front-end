@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { COUNTRIES } from "@/constants/countries";
 
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
 import TaxForm from "@/components/TaxForm";
@@ -96,6 +97,7 @@ export default function DashboardPage() {
     const prevStep = () => {
         setDirection(-1);
         setStep((prev) => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3 | 4);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     useEffect(() => {
@@ -326,10 +328,10 @@ export default function DashboardPage() {
                                         <div>
                                             <CardTitle className="text-2xl text-white flex items-center gap-2">
                                                 <FileBarChart className="w-6 h-6 text-cyan-400" />
-                                                分析报告 ({formData.taxYear})
+                                                税务分析报告 ({formData.taxYear})
                                             </CardTitle>
                                             <CardDescription>
-                                                基于您在 {formData.country} 的税务身份分析
+                                                基于您在 <span className="text-cyan-400 font-medium">{COUNTRIES.find(c => c.value === formData.country)?.label.split('(')[1]?.replace(')', '') || formData.country}</span> 的税务身份分析
                                             </CardDescription>
                                         </div>
                                         <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-900/20">
@@ -499,7 +501,7 @@ export default function DashboardPage() {
                         )}
                     </CardContent>
                     <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
-                        <Button variant="ghost" onClick={() => setStep(3)} className="cursor-pointer text-blue-400 border-none bg-transparent hover:bg-white">
+                        <Button variant="ghost" onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="cursor-pointer text-blue-400 border-none bg-transparent hover:bg-white">
                             返回报告
                         </Button>
                         <Button
