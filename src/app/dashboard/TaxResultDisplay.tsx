@@ -28,60 +28,46 @@ export default function TaxResultDisplay({
             <div className="space-y-4">
                 {/* 第一行 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">交易笔数</p>
-                        <p className="text-2xl font-bold text-white">{totalTransactions}</p>
+                    <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-300 uppercase">交易笔数</p>
+                        <p className="text-2xl font-bold text-yellow-400 m-0">{totalTransactions}</p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">总数量 (amount)</p>
-                        <p className="text-2xl font-bold text-white">{totalAmount.toLocaleString()}</p>
+                    <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-300 uppercase">总数量 (amount)</p>
+                        <p className="text-2xl font-bold text-white m-0">{totalAmount.toLocaleString()}</p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">盈利笔数</p>
-                        <p className="text-2xl font-bold text-yellow-400">{profitableCount}</p>
+                    <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-300 uppercase">资产种类</p>
+                        <p className="text-2xl font-bold text-white m-0">
+                            {Array.from(new Set(transactions.map((t) => t.token))).filter(Boolean).length}
+                        </p>
                     </div>
                 </div>
                 
                 {/* 第二行 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">总盈亏 (profit)</p>
-                        <p className={`text-2xl font-bold ${totalProfit >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-400 uppercase">总盈亏 (profit)</p>
+                        <p className={`text-2xl m-0 font-bold ${totalProfit >= 0 ? "text-green-400" : "text-red-400"}`}>
                             {totalProfit >= 0 ? "+" : ""}{totalProfit.toLocaleString()}
                         </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">平均盈亏/笔</p>
-                        <p className="text-2xl font-bold text-cyan-400">
+                    <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                        <p className="text-xs text-zinc-400 uppercase">平均盈亏/笔</p>
+                        <p className="text-2xl m-0 font-bold text-cyan-400">
                             {totalTransactions > 0 ? (totalProfit / totalTransactions).toFixed(4) : "0"}
                         </p>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase">资产种类</p>
-                        <p className="text-2xl font-bold text-white">
-                            {Array.from(new Set(transactions.map((t) => t.token))).filter(Boolean).length}
-                        </p>
-                    </div>
+                    {analyzeData && (
+                            <div className="bg-white/5 p-4 pt-3 rounded-xl border border-white/10">
+                                <p className="text-xs text-zinc-400 uppercase">税率</p>
+                                <p className="m-0 text-2xl font-bold text-cyan-400">{(analyzeData.taxRate * 100).toFixed(2)}%</p>
+                            </div>
+                    )}
+
                 </div>
 
-                {analyzeData && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                            <p className="text-xs text-zinc-500 uppercase">预估税额</p>
-                            <p className="text-2xl font-bold text-white">${analyzeData.taxAmount.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                            <p className="text-xs text-zinc-500 uppercase">税率</p>
-                            <p className="text-2xl font-bold text-cyan-400">{(analyzeData.taxRate * 100).toFixed(2)}%</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                            <p className="text-xs text-zinc-500 uppercase">策略 / Authority</p>
-                            <p className="text-sm font-mono text-white break-all">
-                                {analyzeData.strategy} / {analyzeData.authority}
-                            </p>
-                        </div>
-                    </div>
-                )}
+
             </div>
 
             {/* 交易明细 */}

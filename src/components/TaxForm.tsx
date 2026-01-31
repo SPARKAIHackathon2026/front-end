@@ -76,7 +76,7 @@ export default function TaxForm({ formData, onFormDataChange }: TaxFormProps) {
             {formData.country === "cn" && (
                 <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 space-y-4">
                     <h4 className="text-sm font-bold text-red-400">中国税务合规细节</h4>
-                    <div className="space-y-3 text-white">
+                    <div className="space-y-3 ">
                         <Label className="text-xs uppercase tracking-wider text-zinc-500">交易目的 / 身份判断</Label>
                         <RadioGroup
                             value={formData.intent}
@@ -85,11 +85,11 @@ export default function TaxForm({ formData, onFormDataChange }: TaxFormProps) {
                         >
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="investment" id="cn_i1" />
-                                <Label className="text-white" htmlFor="cn_i1">长期投资 / 偶发交易</Label>
+                                <Label htmlFor="cn_i1">长期投资 / 偶发交易</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="trading" id="cn_i2" />
-                                <Label className="text-white" htmlFor="cn_i2">高频交易 / 营利性经营</Label>
+                                <Label htmlFor="cn_i2">高频交易 / 营利性经营</Label>
                             </div>
                         </RadioGroup>
                     </div>
@@ -127,7 +127,7 @@ export default function TaxForm({ formData, onFormDataChange }: TaxFormProps) {
                                 onFormDataChange({...formData, annualIncome: v === "" ? undefined : Number(v)});
                             }}
                             placeholder="预计非加密货币年收入 ($)"
-                            className="bg-white/5 border-white/10 text-white placeholder:text-zinc-500"
+                            className="bg-white/5 border-white/10 text-white placeholder:text-zinc-500 w-full"
                         />
                     </div>
                 </div>
