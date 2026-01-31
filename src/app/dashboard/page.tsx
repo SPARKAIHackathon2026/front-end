@@ -29,26 +29,28 @@ import {
     useTaxAnalysis,
     useTransactions,
 } from "@/lib/api/hooks";
+import Image from "next/image";
 
 
 
 const useMockAccount = () => {
-    const { isConnected, address } = useAccount();
+    const { isConnected, address, connector } = useAccount();
     const { disconnect } = useDisconnect();
     const { openConnectModal } = useConnectModal();
 
     const connect = () => {
         openConnectModal?.();
     };
-
-    return { isConnected, address: address ?? null, connect, disconnect };
+    return { isConnected, address: address ?? null, connect, disconnect, connector };
 };
+
+
 
 export default function DashboardPage() {
     // 状态管理
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
-    const { isConnected, address, connect, disconnect } = useMockAccount(); // 模拟钱包 Hook
+    const { isConnected, address, connect, disconnect, connector } = useMockAccount(); // 模拟钱包 Hook
     const [transActionData, setTransActionData] = useState<Transaction[]>([]);
 
     const [shouldAnalyze, setShouldAnalyze] = useState(false);
@@ -216,8 +218,11 @@ export default function DashboardPage() {
                                             <Wallet className="w-8 h-8 text-green-400" />
                                         </div>
                                         <div className="text-center">
-                                            <h3 className="text-lg font-bold text-white">已连接 RainbowKit</h3>
-                                            <p className="text-gray-400 font-mono mt-1">{address}</p>
+                                            <div className="flex items-center justify-center gap-2 mb-2">
+                                                <span className="text-2xl">💼</span>
+                                                <h3 className="text-lg font-bold text-white">已连接至{connector?.name || "钱包"}</h3>
+                                            </div>
+                                            <p className="text-gray-400 font-mono text-sm">{address}</p>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => disconnect()} className="mt-2 border-red-500/30 text-red-400 hover:bg-red-950/30 hover:text-red-300">
                                             断开连接
