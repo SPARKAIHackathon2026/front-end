@@ -18,6 +18,7 @@ import { COUNTRIES } from "@/constants/countries";
 
 import TaxResultDisplay from "@/app/dashboard/TaxResultDisplay";
 import TaxForm from "@/components/TaxForm";
+import Fireworks from "@/components/Fireworks";
 import {
     type SettleTaxResult,
     type Transaction,
@@ -53,6 +54,7 @@ export default function DashboardPage() {
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [direction, setDirection] = useState(0); // 用于控制动画方向
     const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+    const [showFireworks, setShowFireworks] = useState(false);
     const { isConnected, address, connect, disconnect, connector } = useMockAccount(); // 模拟钱包 Hook
     const [transActionData, setTransActionData] = useState<Transaction[]>([]);
 
@@ -98,6 +100,7 @@ export default function DashboardPage() {
     const prevStep = () => {
         setDirection(-1);
         setStep((prev) => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3 | 4);
+        setShowFireworks(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -182,6 +185,7 @@ export default function DashboardPage() {
 
             setSettleHistory((prev) => [{ ...normalized, createdAt: Date.now() }, ...prev]);
             setIsPaymentLoading(false);
+            setShowFireworks(true);
             setDirection(1);
             setStep(4);
         } catch (e) {
@@ -665,6 +669,10 @@ export default function DashboardPage() {
                     </motion.div>
                 )}
             </main>
+            
+            {/* Fireworks Animation */}
+            <Fireworks trigger={showFireworks} />
+            
             {/* Footer */}
             <Footer />
         </div>
