@@ -451,12 +451,32 @@ export default function DashboardPage() {
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="space-y-1">
-                                                <div className="text-sm text-gray-300">
+                                                <div className="text-sm text-gray-300 mb-10">
                                                     {new Date(item.createdAt).toLocaleString()}
                                                 </div>
-                                                <div className="text-xs text-gray-500 font-mono break-all">
-                                                    {item.txHash}
-                                                </div>
+                                                <div className="text-xs text-gray-400">交易哈希</div>
+                                                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-950/20 px-2 py-1 mb-2">
+                                                    <Link 
+                                                        href={`https://testnet.kitescan.ai/tx/${item.txHash}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs font-mono text-blue-300 underline cursor-pointer"
+                                                    >
+                                                        {item.txHash}
+                                                    </Link>
+                                                </Badge>
+
+                                                <div className="text-xs text-gray-400">用户地址</div>
+                                                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-950/20 px-2 py-1 mb-2">
+                                                    <Link
+                                                        href={`https://testnet.kitescan.ai/address/${item.userAddress}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs font-mono border-green-500/30 text-green-400 underline cursor-pointer"
+                                                    >
+                                                        {item.userAddress}
+                                                    </Link>
+                                                </Badge>
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-xs text-gray-400">税额</div>
@@ -464,12 +484,14 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                         <div className="mt-3 flex gap-2 flex-wrap">
-                                            <Badge variant="outline" className="border-white/10 text-gray-300">
-                                                {item.mode}
+                                            <Badge variant="outline" className="border-white/10 text-gray-300 px-2 py-1 ">
+                                                    {item.authority}
                                             </Badge>
-                                            <Badge variant="outline" className="border-white/10 text-gray-300">
-                                                {item.authority}
-                                            </Badge>
+                                            <div>
+                                                <Badge variant="outline" className="border-white/10 text-gray-300 px-2 py-1">
+                                                    {item.mode}
+                                                </Badge>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -477,7 +499,7 @@ export default function DashboardPage() {
                         )}
                     </CardContent>
                     <CardFooter className="flex justify-between pt-4 bg-white/5 border-t border-white/10">
-                        <Button variant="ghost" onClick={() => setStep(3)} className="text-gray-400">
+                        <Button variant="ghost" onClick={() => setStep(3)} className="cursor-pointer text-blue-400 border-none bg-transparent hover:bg-white">
                             返回报告
                         </Button>
                         <Button
@@ -488,7 +510,7 @@ export default function DashboardPage() {
                                 setDirection(-1);
                                 setStep(1);
                             }}
-                            className="bg-cyan-500 hover:bg-cyan-400 text-black px-8"
+                            className=" cursor-pointer bg-cyan-500 hover:bg-cyan-400 text-black px-8 border-none"
                         >
                             重新开始
                         </Button>
