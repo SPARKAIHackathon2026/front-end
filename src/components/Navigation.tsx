@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Wallet } from 'lucide-react';
+import Link from "next/link";
+
 
 const navLinks = [
   { label: '功能', href: '#features' },
@@ -71,7 +73,7 @@ export default function Navigation() {
                 <button
                   key={link.href}
                   onClick={() => scrollToSection(link.href)}
-                  className={`text-sm font-medium transition-all hover:text-[#3898EC] relative group ${
+                  className={`cursor-pointer text-sm font-medium transition-all border-none bg-transparent hover:text-[#3898EC] relative group ${
                     isScrolled ? 'text-white/80' : 'text-white/80'
                   }`}
                 >
@@ -83,12 +85,14 @@ export default function Navigation() {
 
             {/* CTA Button */}
             <div className="hidden md:block">
-              <button 
-                onClick={() => scrollToSection('#contact')}
-                className="btn-primary text-sm py-2.5 px-6"
-              >
-                开始使用
-              </button>
+                <Link href="/dashboard">
+                    <button
+                        className="cursor-pointer btn-primary text-sm py-2.5 px-6 border-none"
+                    >
+                        开始使用
+                    </button>
+                </Link>
+
             </div>
 
             {/* Mobile Menu Button */}

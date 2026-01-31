@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import Marquee from '@/components/Marquee';
+import { useRouter } from 'next/navigation';
 
 export default function Hero() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -26,7 +28,7 @@ export default function Hero() {
         <div className="section-padding flex flex-col items-center text-center">
           {/* Badge */}
           <div 
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[#3898EC]/30 mb-8 transition-all duration-700 ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[#3898EC] mb-8 transition-all duration-700 ${
               isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
@@ -72,16 +74,16 @@ export default function Hero() {
               isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
-            <button 
-              onClick={() => scrollToSection('#contact')}
-              className="btn-primary flex items-center justify-center gap-2 group"
-            >
-              开始申报
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+                  <button
+                      onClick={() => router.push('/dashboard')}
+                      className="cursor-pointer btn-primary flex items-center justify-center gap-2 group border-none"
+                  >
+                      开始申报
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
             <button 
               onClick={() => scrollToSection('#features')}
-              className="btn-secondary flex items-center justify-center gap-2"
+              className="btn-secondary flex items-center justify-center gap-2 border-white bg-transparent"
             >
               <Play className="w-5 h-5" />
               观看演示

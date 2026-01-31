@@ -112,7 +112,7 @@ export default function Footer() {
                     <li key={linkIndex}>
                       <button
                         onClick={() => scrollToSection(link.href)}
-                        className="text-white/50 text-sm hover:text-[#3898EC] transition-colors relative group"
+                        className="mb-2 text-white/50 text-sm hover:text-[#3898EC] transition-colors relative group border-none bg-transparent"
                       >
                         {link.label}
                         <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-[#3898EC] opacity-0 group-hover:opacity-100 transition-opacity" />

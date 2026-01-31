@@ -182,25 +182,7 @@ export default function Advantages() {
               })}
             </div>
 
-            {/* CTA */}
-            <div 
-              className="mt-8 p-6 rounded-xl bg-gradient-to-r from-[#3898EC]/20 to-transparent border border-[#3898EC]/30"
-              style={{ 
-                opacity: isVisible ? 1 : 0,
-                transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                transition: 'all 0.5s ease 600ms'
-              }}
-            >
-              <p className="text-white/80 text-sm mb-4">
-                准备好体验无感自动报税了吗？
-              </p>
-              <button 
-                onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
-                className="btn-primary text-sm py-3 px-6"
-              >
-                立即开始
-              </button>
-            </div>
+
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Mail, MessageCircle, Send } from 'lucide-react';
+import Link from "next/link";
 
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -162,17 +163,20 @@ export default function Contact() {
               { 
                 title: '技术支持', 
                 desc: '7×24 小时在线客服',
-                action: '联系支持'
+                action: '联系支持',
+                href:"https://docs.gokite.ai"
               },
               { 
                 title: '预约演示', 
                 desc: '一对一产品讲解',
-                action: '预约演示'
+                action: '预约演示',
+                href:"https://github.com/SPARKAIHackathon2026"
               },
               { 
                 title: '开发者文档', 
                 desc: 'API 与集成指南',
-                action: '查看文档'
+                action: '查看文档',
+                href:"https://github.com/SPARKAIHackathon2026"
               },
             ].map((item, index) => (
               <div 
@@ -181,10 +185,12 @@ export default function Contact() {
               >
                 <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
                 <p className="text-white/50 text-sm mb-4">{item.desc}</p>
-                <button className="inline-flex items-center gap-2 text-[#3898EC] text-sm font-medium group-hover:gap-3 transition-all">
-                  {item.action}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                  <Link href={item.href} target="_blank" rel="noopener noreferrer">
+                      <button className="inline-flex items-center gap-2 text-[#3898EC] text-sm font-medium group-hover:gap-3 transition-all border-none bg-transparent">
+                          {item.action}
+                          <ArrowRight className="w-4 h-4" />
+                      </button>
+                  </Link>
               </div>
             ))}
           </div>

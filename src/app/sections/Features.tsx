@@ -146,7 +146,7 @@ export default function Features() {
                   </p>
 
                   {/* Learn more link */}
-                  <button className="inline-flex items-center gap-2 text-[#3898EC] text-sm font-medium group/link">
+                  <button className="inline-flex items-center gap-2 text-[#3898EC] text-sm font-medium group/link border-none bg-transparent">
                     了解更多
                     <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                   </button>
