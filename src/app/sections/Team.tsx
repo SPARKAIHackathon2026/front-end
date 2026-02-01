@@ -8,9 +8,9 @@ const teamMembers =[
         "role": "联合创始人 & 技术架构师",
         "roleEn": "Co-Founder & Technical Architect",
         "image": "/team-2.png",
-        "bio": "新加坡在读，兼具创意孵化与技术落地能力，作为联合创始人主导KiteTax Pal项目核心创意提出，负责后端开发与智能合约编写，为项目提供坚实的技术架构支撑",
+        "bio": "区块链专业在读硕士，兼具创意孵化与技术落地能力，作为联合创始人主导KiteTax Pal项目核心创意提出，负责后端开发与智能合约编写，为项目提供坚实的技术架构支撑",
         "social": {
-            "linkedin": "#",
+            "linkedin": "https://www.linkedin.com/in/qiyuan-huang-894b5b378/",
             "twitter": "#",
             "github": "https://github.com/SArreic"
         }
