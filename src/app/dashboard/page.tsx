@@ -70,7 +70,14 @@ export default function DashboardPage() {
     const settleTaxMutation = useSettleTax();
 
     // 表单数据
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        country: string;
+        taxYear: string;
+        residency: string;
+        intent?: string;
+        filingStatus?: "single" | "married";
+        annualIncome?: number;
+    }>({
         country: "sg",
         taxYear: "2025",
         residency: "sg",
