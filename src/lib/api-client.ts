@@ -6,7 +6,9 @@
 import axios, { AxiosError, type AxiosInstance } from "axios";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+    ? 'https://kite-payment-backend.vercel.app'
+    : 'http://localhost:3001';
 
 export interface ApiResponse<T> {
   success: boolean;
